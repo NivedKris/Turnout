@@ -9,11 +9,14 @@ import {
   campaignRates,
   dataCoverage,
   evaluateRules,
+  flows,
   funnel,
   projection,
   reallocation,
+  registeredVisitors,
   scenario,
   series,
+  statusCounts,
   targetVsActual,
   trend,
   TREND_METRICS,
@@ -152,6 +155,19 @@ export function buildTools(ctx: ToolContext) {
           projection_base: { method: base.value.method, registrations: r1(base.value.registrations), visitors: r1(base.value.visitors), spend: Math.round(base.value.spend), capped_by_capacity: base.value.capped_by_capacity, notes: base.value.notes },
           projection_stretch: { registrations: r1(stretch.value.registrations), visitors: r1(stretch.value.visitors) },
           venue_capacity: s.capacity,
+          attendance: (() => {
+            const f = flows(s);
+            const atStart = statusCounts(s, null, true);
+            const regV = registeredVisitors(s);
+            return {
+              unique_verified_visitors: s.visitors.size,
+              registered_visitors: regV,
+              walk_ins: f.walk_ins,
+              confirmed_at_event_start: atStart?.confirmed ?? null,
+              show_up_rate: atStart ? r4(regV / Math.max(1, atStart.confirmed)) : null,
+              show_up_definition: "registered verified visitors ÷ registrations confirmed at event start (null before the event)",
+            };
+          })(),
           bottleneck: bn.value.bottleneck ? { stage: bn.value.bottleneck.label, actual: r4(bn.value.bottleneck.actual), benchmark: r4(bn.value.bottleneck.benchmark), index: r4(bn.value.bottleneck.index) } : null,
           rule_verdicts: counts,
           projection_formula: base.formula,
@@ -182,6 +198,11 @@ export function buildTools(ctx: ToolContext) {
           identified_layer: f.value.identified.map(stage),
           walk_ins: f.value.walk_ins,
           total_unique_verified_visitors: f.value.total_visitors,
+          show_up_rate: (() => {
+            const atStart = statusCounts(s, cid, true);
+            return atStart ? r4(registeredVisitors(s, cid) / Math.max(1, atStart.confirmed)) : null;
+          })(),
+          show_up_definition: "registered verified visitors ÷ registrations confirmed AT EVENT START (not the final confirmed count)",
           summed_daily_reach_not_unique: f.value.reported_reach_sum,
         };
       }),
@@ -193,7 +214,7 @@ export function buildTools(ctx: ToolContext) {
       inputSchema: z.object({
         as_of: asOfArg,
         status: z.enum(["planned", "active", "paused", "stopped", "completed"]).optional(),
-        sort_by: z.enum(["registrations", "spend", "cost_per_registration", "cpr_14d", "visitors", "show_up_rate", "ctr"]).optional(),
+        sort_by: z.enum(["registrations", "spend", "cpr_lifetime", "cpr_last_14_days", "visitors", "show_up_rate", "ctr"]).optional(),
         limit: z.number().int().min(1).max(20).optional(),
       }),
       execute: traced("list_campaigns", ({ as_of, status, sort_by, limit }: { as_of?: string; status?: string; sort_by?: string; limit?: number }, id) => {
@@ -213,8 +234,8 @@ export function buildTools(ctx: ToolContext) {
             status: c.status,
             spend: c.spend,
             registrations: c.registrations,
-            cost_per_registration: r4(c.cost_per_registration),
-            cpr_14d: r4(v.get(c.campaign_id)?.value ?? null),
+            cpr_lifetime: r4(c.cost_per_registration),
+            cpr_last_14_days: r4(v.get(c.campaign_id)?.value ?? null),
             ctr: r4(c.ctr),
             confirm_rate: r4(c.confirm_rate),
             cancel_rate: r4(c.cancel_rate),
@@ -223,7 +244,7 @@ export function buildTools(ctx: ToolContext) {
             verdict: v.get(c.campaign_id)?.verdict ?? "insufficient_data",
           }));
         if (sort_by) rows = rows.sort((a, b) => ((b[sort_by as keyof typeof b] as number) ?? -Infinity) - ((a[sort_by as keyof typeof a] as number) ?? -Infinity));
-        return { as_of: s.asOf, portfolio_cpr_14d: r4(rules.value.portfolio_cpr), campaigns: rows.slice(0, limit ?? 20) };
+        return { as_of: s.asOf, portfolio_cpr_last_14_days: r4(rules.value.portfolio_cpr), campaigns: rows.slice(0, limit ?? 20) };
       }),
     }),
 
@@ -253,8 +274,8 @@ export function buildTools(ctx: ToolContext) {
           origin: c.origin,
           audience: c.target_audience,
           objective_plan_not_outcome: c.objective,
-          kpis: Object.fromEntries(Object.entries(kk).filter(([key]) => !["campaign_id", "campaign_name", "channel", "owner_name", "status"].includes(key)).map(([key, val]) => [key, typeof val === "number" ? r4(val) : val])),
-          rule: { verdict: e.verdict, reason: e.reason, metric: e.metric, value: r4(e.value), scale_if: r4(e.thresholds.scale_if), stop_if: r4(e.thresholds.stop_if), basis: e.thresholds.basis, window: e.window, sample: e.sample, signals: e.signals.map((x) => ({ ...x, value: r4(x.value) })) },
+          kpis_lifetime_to_as_of: Object.fromEntries(Object.entries(kk).filter(([key]) => !["campaign_id", "campaign_name", "channel", "owner_name", "status"].includes(key)).map(([key, val]) => [key === "cost_per_registration" ? "cpr_lifetime" : key, typeof val === "number" ? r4(val) : val])),
+          rule: { verdict: e.verdict, reason: e.reason, metric: e.metric, [e.metric === "cost_per_registration" ? "cpr_last_14_days" : `${e.metric}_window`]: r4(e.value), scale_if: r4(e.thresholds.scale_if), stop_if: r4(e.thresholds.stop_if), basis: e.thresholds.basis, window: e.window, sample: e.sample, signals: e.signals.map((x) => ({ ...x, value: r4(x.value) })) },
           forward: rate ? { registrations_per_day_7d: r4(rate.reg_rate_7d), spend_per_day_7d: r4(rate.spend_rate_7d), best_7d_registrations_per_day: r4(rate.best_reg_rate_7d), marginal_cpr_14d: r4(rate.marginal_cpr) } : null,
         };
       }),
@@ -278,7 +299,7 @@ export function buildTools(ctx: ToolContext) {
             continue;
           }
           const c = k.value.find((x) => x.campaign_id === m.match!.campaign_id)!;
-          out.push({ id: c.campaign_id, name: c.campaign_name, spend: c.spend, registrations: c.registrations, cpr: r4(c.cost_per_registration), cpr_14d: r4(v.get(c.campaign_id)?.value ?? null), ctr: r4(c.ctr), session_to_start: r4(c.session_to_start), confirm_rate: r4(c.confirm_rate), cancel_rate: r4(c.cancel_rate), visitors: c.visitors, show_up_rate: r4(c.show_up_rate), cost_per_visitor: r4(c.cost_per_visitor), verdict: v.get(c.campaign_id)?.verdict });
+          out.push({ id: c.campaign_id, name: c.campaign_name, spend: c.spend, registrations: c.registrations, cpr_lifetime: r4(c.cost_per_registration), cpr_last_14_days: r4(v.get(c.campaign_id)?.value ?? null), ctr: r4(c.ctr), session_to_start: r4(c.session_to_start), confirm_rate: r4(c.confirm_rate), cancel_rate: r4(c.cancel_rate), visitors: c.visitors, show_up_rate: r4(c.show_up_rate), cost_per_visitor: r4(c.cost_per_visitor), verdict: v.get(c.campaign_id)?.verdict });
         }
         return { as_of: s.asOf, campaigns: out, unresolved };
       }),
@@ -351,9 +372,9 @@ export function buildTools(ctx: ToolContext) {
         for (const e of r.value.evaluations) rec.rule(eid, e);
         return {
           as_of: s.asOf,
-          portfolio_cpr_14d: r4(r.value.portfolio_cpr),
+          portfolio_cpr_last_14_days: r4(r.value.portfolio_cpr),
           method: r.formula,
-          evaluations: r.value.evaluations.map((e) => ({ id: e.campaign_id, name: e.campaign_name, owner: e.owner_name, verdict: e.verdict, reason: e.reason, value: r4(e.value), scale_if: r4(e.thresholds.scale_if), stop_if: r4(e.thresholds.stop_if), basis: e.thresholds.basis, sample: e.sample, weak_signals: e.signals.filter((x) => x.weak).map((x) => x.key) })),
+          evaluations: r.value.evaluations.map((e) => ({ id: e.campaign_id, name: e.campaign_name, owner: e.owner_name, verdict: e.verdict, reason: e.reason, metric_value_last_window: r4(e.value), scale_if: r4(e.thresholds.scale_if), stop_if: r4(e.thresholds.stop_if), basis: e.thresholds.basis, sample: e.sample, weak_signals: e.signals.filter((x) => x.weak).map((x) => x.key) })),
         };
       }),
     }),

@@ -33,7 +33,9 @@ describe("tool router", () => {
   it("carries intent into short follow-ups", () => {
     expect(routeTools(["Where's our biggest bottleneck?", "and for Paid Social?"])).toEqual(expect.arrayContaining(["get_bottleneck", "get_campaign"]));
   });
-  it("never offers more than 8 tools", () => {
-    expect(routeTools(["why should we cut paid social campaign budget what if trend task create compare"]).length).toBeLessThanOrEqual(8);
+  it("never offers more than 9 tools and always offers propose_task", () => {
+    const r = routeTools(["why should we cut paid social campaign budget what if trend task create compare"]);
+    expect(r.length).toBeLessThanOrEqual(9);
+    expect(routeTools(["Which campaign should we cut?"])).toContain("propose_task");
   });
 });

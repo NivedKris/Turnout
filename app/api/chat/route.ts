@@ -94,6 +94,8 @@ export async function POST(req: Request) {
         activeTools: active,
         stopWhen: isStepCount(8),
         temperature: 0.1,
+        // Re-run a failed step; the provider middleware moves it to the next live model.
+        streamRetries: 3,
       });
 
       writer.merge(

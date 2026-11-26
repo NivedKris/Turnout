@@ -68,13 +68,15 @@ export function chainModel(chain: ChainEntry[], rec: TraceRecorder): LanguageMod
   let step = 0;
   // Remember a model that failed during this turn and skip it for later steps.
   const dead = new Set<number>();
+  let lastFailed: string | null = null;
 
   const middleware: LanguageModelV4Middleware = {
     specificationVersion: "v4",
     wrapStream: async ({ params }) => {
       step++;
       let lastErr: unknown = null;
-      let prevNode: string | null = null;
+      let prevNode: string | null = lastFailed;
+      lastFailed = null;
       for (let i = 0; i < chain.length; i++) {
         if (dead.has(i)) continue;
         const c = chain[i]!;
@@ -98,7 +100,24 @@ export function chainModel(chain: ChainEntry[], rec: TraceRecorder): LanguageMod
           rec.trace.providers.push({ provider: `${c.provider}#${c.key}`, model: c.model, ok: true, ms: Math.round(performance.now() - t) });
           rec.trace.stats.steps = step;
           rec.currentLlm = id;
-          return res;
+          // In-stream provider errors (malformed tool JSON, tool-validation 400s, mid-stream 429s):
+          // mark this model dead for the turn; streamText's streamRetries then re-runs the step on the next model.
+          const idx = i;
+          const stream = res.stream.pipeThrough(
+            new TransformStream({
+              transform(chunk, ctl) {
+                if ((chunk as { type?: string }).type === "error") {
+                  const err = (chunk as { error?: unknown }).error;
+                  dead.add(idx);
+                  rec.update(id, { status: "fallback", sub: `in-stream: ${describe(err)}` });
+                  rec.trace.providers.push({ provider: `${c.provider}#${c.key}`, model: c.model, ok: false, ms: Math.round(performance.now() - t), error: `in-stream: ${describe(err)}` });
+                  lastFailed = id;
+                }
+                ctl.enqueue(chunk);
+              },
+            }),
+          );
+          return { ...res, stream };
         } catch (err) {
           lastErr = err;
           dead.add(i);

@@ -23,7 +23,7 @@ import {
   type SourceRef,
   BENCHMARKS,
 } from "@/lib/analytics";
-import { loadDataset } from "@/lib/analytics/load";
+import { loadDataset, servedVersion } from "@/lib/analytics/load";
 import { getDb } from "@/lib/db";
 import { addDays, daysBetween, toDayKey } from "@/lib/time";
 import { KPIS, KPI_ORDER, type KpiDef, type KpiKey } from "@/lib/ui/kpis";
@@ -64,6 +64,31 @@ function metaOf(s: Snapshot, ds: Dataset): Meta {
     festival: ds.settings.festival_name,
     city: ds.settings.city,
     capacity: s.capacity,
+  };
+}
+
+/* ───────────────────────── view cache ───────────────────────── */
+
+/**
+ * Memoises a view model by data version + arguments. Any write bumps the version,
+ * so cached views can never be stale; repeat visits and parallel cards are instant.
+ */
+const g = globalThis as typeof globalThis & { __turnoutViews?: Map<string, Promise<unknown>> };
+const VIEWS = (g.__turnoutViews ??= new Map());
+const MAX_VIEWS = 120;
+
+function cachedView<A extends unknown[], R>(name: string, raw: (...args: A) => Promise<R>): (...args: A) => Promise<R> {
+  return async (...args: A) => {
+    await connection();
+    await loadDataset();
+    const key = `${servedVersion()}|${name}|${JSON.stringify(args)}`;
+    const hit = VIEWS.get(key) as Promise<R> | undefined;
+    if (hit) return hit;
+    const p = raw(...args);
+    VIEWS.set(key, p);
+    p.catch(() => VIEWS.delete(key));
+    if (VIEWS.size > MAX_VIEWS) VIEWS.delete(VIEWS.keys().next().value!);
+    return p;
   };
 }
 
@@ -110,6 +135,7 @@ function kpiSeries(ds: Dataset, s: Snapshot, key: KpiKey, campaignId?: string | 
   if (key in SERIES_KEY) return series(s, SERIES_KEY[key as keyof typeof SERIES_KEY], { campaignId, from: start });
   const n = Math.max(0, daysBetween(start, s.asOf) + 1);
   const out: { day: string; value: number }[] = [];
+  const timeline = key === "cnf" || key === "shw" ? statusTimeline(s, key, start, n, campaignId) : [];
   for (let i = 0; i < n; i++) {
     const day = addDays(start, i);
     let v: number | null = null;
@@ -117,11 +143,55 @@ function kpiSeries(ds: Dataset, s: Snapshot, key: KpiKey, campaignId?: string | 
       const f = flows(s, { from: addDays(day, -6), to: day, campaignId });
       v = key === "cpr" ? ratio(f.spend, f.registrations) : ratio(f.clicks, f.impressions);
     } else {
-      // Status-based ratios need the state as of that day.
-      const si = buildSnapshot(ds, day);
-      v = kpiValue(si, key, campaignId);
+      v = timeline[i] ?? null;
     }
     out.push({ day, value: v ?? 0 });
+  }
+  return out;
+}
+
+/**
+ * Confirm-rate (or show-up) per day in one pass over the status history, instead of
+ * rebuilding a snapshot for every day. Same rules: external registrations, latest status ≤ end of day.
+ */
+function statusTimeline(s: Snapshot, key: "cnf" | "shw", start: string, n: number, campaignId?: string | null): (number | null)[] {
+  const regs = s.registrations.filter((r) => !campaignId || r.campaign_id === campaignId);
+  const regDay = new Map(regs.map((r) => [r.registration_id, toDayKey(r.registered_at)]));
+  if (key === "shw") {
+    const atStart = statusCounts(s, campaignId, true);
+    const conf = atStart?.confirmed ?? 0;
+    const byDay = new Map<string, number>();
+    for (const v of s.visitors.values()) if (!v.walk_in && (!campaignId || v.campaign_id === campaignId)) byDay.set(toDayKey(v.first_admitted_at), (byDay.get(toDayKey(v.first_admitted_at)) ?? 0) + 1);
+    let acc = 0;
+    return Array.from({ length: n }, (_, i) => {
+      const d = addDays(start, i);
+      acc += byDay.get(d) ?? 0;
+      return d < s.eventStartDay || !conf ? null : acc / conf;
+    });
+  }
+  // cnf: replay status versions in time order.
+  const events = [...s.historyByReg.entries()]
+    .filter(([rid]) => regDay.has(rid))
+    .flatMap(([rid, hs]) => hs.map((h) => ({ rid, day: toDayKey(h.effective_at), t: h.effective_at.getTime(), id: h.history_id, status: h.status })))
+    .sort((a, b) => a.t - b.t || (a.id < b.id ? -1 : 1));
+  const status = new Map<string, string>();
+  const regsByDay = new Map<string, number>();
+  for (const d of regDay.values()) regsByDay.set(d, (regsByDay.get(d) ?? 0) + 1);
+  let ei = 0;
+  let regCount = 0;
+  let confirmed = 0;
+  const out: (number | null)[] = [];
+  for (let i = 0; i < n; i++) {
+    const d = addDays(start, i);
+    regCount += regsByDay.get(d) ?? 0;
+    while (ei < events.length && events[ei]!.day <= d) {
+      const e = events[ei++]!;
+      const prev = status.get(e.rid);
+      if (prev === "confirmed") confirmed--;
+      if (e.status === "confirmed") confirmed++;
+      status.set(e.rid, e.status);
+    }
+    out.push(regCount ? confirmed / regCount : null);
   }
   return out;
 }
@@ -196,7 +266,7 @@ function tiles(ds: Dataset, s: Snapshot): KpiTile[] {
 
 /* ───────────────────────── Overview ───────────────────────── */
 
-export async function overviewView(asOfInput?: string) {
+async function overviewViewRaw(asOfInput?: string) {
   await connection();
   const ds = await loadDataset();
   const s = buildSnapshot(ds, asOfInput);
@@ -270,7 +340,7 @@ export type OverviewView = Awaited<ReturnType<typeof overviewView>>;
 
 /* ───────────────────────── KPI drill-down ───────────────────────── */
 
-export async function kpiView(key: KpiKey, asOfInput?: string) {
+async function kpiViewRaw(key: KpiKey, asOfInput?: string) {
   await connection();
   const ds = await loadDataset();
   const s = buildSnapshot(ds, asOfInput);
@@ -397,7 +467,7 @@ export type KpiView = Awaited<ReturnType<typeof kpiView>>;
 
 /* ───────────────────────── Funnel ───────────────────────── */
 
-export async function funnelView(asOfInput?: string, campaignId?: string | null) {
+async function funnelViewRaw(asOfInput?: string, campaignId?: string | null) {
   await connection();
   const ds = await loadDataset();
   const s = buildSnapshot(ds, asOfInput);
@@ -437,7 +507,7 @@ export async function campaignsView(asOfInput?: string) {
   return { meta: o.meta, rows: o.leaderboard, portfolioCpr: o.portfolioCpr };
 }
 
-export async function campaignView(id: string, asOfInput?: string) {
+async function campaignViewRaw(id: string, asOfInput?: string) {
   await connection();
   const ds = await loadDataset();
   const s = buildSnapshot(ds, asOfInput);
@@ -493,7 +563,7 @@ export type CampaignView = NonNullable<Awaited<ReturnType<typeof campaignView>>>
 
 /* ───────────────────────── Tasks / activity / settings ───────────────────────── */
 
-export async function tasksView(asOfInput?: string) {
+async function tasksViewRaw(asOfInput?: string) {
   await connection();
   const ds = await loadDataset();
   const s = buildSnapshot(ds, asOfInput);
@@ -527,7 +597,7 @@ export async function activityView(limit = 200) {
   }));
 }
 
-export async function settingsView(asOfInput?: string) {
+async function settingsViewRaw(asOfInput?: string) {
   await connection();
   const ds = await loadDataset();
   const s = buildSnapshot(ds, asOfInput);
@@ -544,7 +614,7 @@ export async function settingsView(asOfInput?: string) {
 
 /* ───────────────────────── Planner ───────────────────────── */
 
-export async function plannerView(asOfInput?: string) {
+async function plannerViewRaw(asOfInput?: string) {
   await connection();
   const ds = await loadDataset();
   const s = buildSnapshot(ds, asOfInput);
@@ -566,3 +636,12 @@ export async function plannerView(asOfInput?: string) {
   };
 }
 export type PlannerView = Awaited<ReturnType<typeof plannerView>>;
+
+/* Cached exports */
+export const overviewView = cachedView("overviewView", overviewViewRaw);
+export const kpiView = cachedView("kpiView", kpiViewRaw);
+export const funnelView = cachedView("funnelView", funnelViewRaw);
+export const campaignView = cachedView("campaignView", campaignViewRaw);
+export const tasksView = cachedView("tasksView", tasksViewRaw);
+export const settingsView = cachedView("settingsView", settingsViewRaw);
+export const plannerView = cachedView("plannerView", plannerViewRaw);

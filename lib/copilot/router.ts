@@ -37,9 +37,9 @@ const ROUTES: { re: RegExp; tools: ToolName[] }[] = [
   { re: /spend|cost|cpr|cpa|cpc|ctr|click|impression|session|reach|budget|₹|rupee/i, tools: ["list_campaigns"] },
 ];
 
-const ALWAYS: ToolName[] = ["calculate", "get_data_coverage"];
+const ALWAYS: ToolName[] = ["calculate", "get_data_coverage", "propose_task"];
 const DEFAULT: ToolName[] = ["get_overview", "list_campaigns", "get_campaign"];
-const MAX = 8;
+const MAX = 9;
 
 export function routeTools(userTexts: string[]): ToolName[] {
   const recent = userTexts.slice(-2);

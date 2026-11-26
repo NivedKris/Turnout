@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache";
 import { getDb } from "@/lib/db";
+import { noteLocalWrite, readDataVersion } from "@/lib/analytics/load";
 import { resetFromBaseline } from "@/lib/seed/load";
 import * as m from "@/lib/server/mutations";
 
@@ -64,5 +65,10 @@ export async function updateSettingsAction(input: unknown) {
 }
 /** Restores the original dataset (reviewer convenience, also available as POST /api/admin/reset). */
 export async function resetDatasetAction() {
-  return run(async () => (await resetFromBaseline(await getDb(), "user")).counts);
+  return run(async () => {
+    const db = await getDb();
+    const r = await resetFromBaseline(db, "user");
+    noteLocalWrite(await readDataVersion(db));
+    return r.counts;
+  });
 }

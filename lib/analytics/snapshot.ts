@@ -50,6 +50,8 @@ export type Snapshot = {
   statusByReg: Map<string, RegistrationHistoryDoc["status"]>;
   /** registration_id → status at event start (for show-up; null before the event). */
   statusAtEventStart: Map<string, RegistrationHistoryDoc["status"]> | null;
+  /** Deduplicated status versions ≤ cutoff, grouped by registration (for timelines). */
+  historyByReg: Map<string, RegistrationHistoryDoc[]>;
   visitors: Map<string, Visitor>;
   quality: {
     duplicates: Record<string, number>;
@@ -139,6 +141,13 @@ export function buildSnapshot(ds: Dataset, asOfInput?: string): Snapshot {
 
   const regIds = new Set(registrations.map((r) => r.registration_id));
   const statusAll = latestStatus(dHist.rows, cutoff);
+  const historyByReg = new Map<string, RegistrationHistoryDoc[]>();
+  for (const h of dHist.rows) {
+    if (h.effective_at > cutoff) continue;
+    const arr = historyByReg.get(h.registration_id);
+    if (arr) arr.push(h);
+    else historyByReg.set(h.registration_id, [h]);
+  }
   const statusByReg = new Map([...statusAll].filter(([k]) => regIds.has(k)));
 
   const started = cutoff >= ds.event.event_starts_at;
@@ -203,6 +212,7 @@ export function buildSnapshot(ds: Dataset, asOfInput?: string): Snapshot {
     registrations,
     statusByReg,
     statusAtEventStart,
+    historyByReg,
     visitors,
     quality: {
       duplicates: {
