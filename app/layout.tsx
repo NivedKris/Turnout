@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Doto, Geist, Geist_Mono } from "next/font/google";
+import { welcomeScript, welcomeStyle } from "@/components/onboarding/Welcome";
 import { themeScript } from "@/components/ui/ThemeToggle";
 import "./globals.css";
 
@@ -24,6 +25,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: welcomeScript }} />
+        <style dangerouslySetInnerHTML={{ __html: welcomeStyle }} />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

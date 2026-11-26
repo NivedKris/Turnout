@@ -13,6 +13,8 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export default function DashboardLayout({ children }: LayoutProps<"/">) {
   return (
+    <>
+    <Welcome />
     <Suspense fallback={null}>
     <CopilotProvider>
     <div className="flex min-h-screen flex-col">
@@ -43,10 +45,10 @@ export default function DashboardLayout({ children }: LayoutProps<"/">) {
       </div>
       <CopilotDrawer />
       <AssistantDock />
-      <Welcome />
       <Tour />
     </div>
     </CopilotProvider>
     </Suspense>
+    </>
   );
 }
