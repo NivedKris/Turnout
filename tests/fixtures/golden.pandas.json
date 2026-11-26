@@ -1,0 +1,275 @@
+{
+ "2025-03-31": {
+  "identified": 3320,
+  "identified_campaign": 3320,
+  "registrations": 2337,
+  "impressions": 860000,
+  "clicks": 26812,
+  "sessions": 20570,
+  "starts": 4715,
+  "spend": 248150,
+  "status": {
+   "confirmed": 1962,
+   "cancelled": 154,
+   "interested": 150,
+   "waitlisted": 71
+  },
+  "visitors": 0,
+  "engaged": 3021,
+  "by_campaign": {
+   "C01": {
+    "regs": 454,
+    "spend": 38700
+   },
+   "C02": {
+    "regs": 636,
+    "spend": 86400
+   },
+   "C03": {
+    "regs": 282,
+    "spend": 54900
+   },
+   "C04": {
+    "regs": 329,
+    "spend": 25200
+   },
+   "C05": {
+    "regs": 256,
+    "spend": 17550
+   },
+   "C06": {
+    "regs": 217,
+    "spend": 12600
+   },
+   "C07": {
+    "regs": 163,
+    "spend": 12800
+   }
+  },
+  "regs_last7": 350,
+  "regs_last7_by": {
+   "C01": 61,
+   "C02": 42,
+   "C03": 50,
+   "C04": 83,
+   "C05": 61,
+   "C06": 23,
+   "C07": 30
+  },
+  "spend_last7": 26500,
+  "regs_last14": 686,
+  "spend_last14": 50475,
+  "last14_by": {
+   "C01": {
+    "regs": 123,
+    "spend": 4300
+   },
+   "C02": {
+    "regs": 75,
+    "spend": 19200
+   },
+   "C03": {
+    "regs": 91,
+    "spend": 12200
+   },
+   "C04": {
+    "regs": 162,
+    "spend": 7875
+   },
+   "C05": {
+    "regs": 128,
+    "spend": 3900
+   },
+   "C06": {
+    "regs": 43,
+    "spend": 1400
+   },
+   "C07": {
+    "regs": 64,
+    "spend": 1600
+   }
+  }
+ },
+ "2025-04-20": {
+  "identified": 3625,
+  "identified_campaign": 3500,
+  "registrations": 2800,
+  "impressions": 1029015,
+  "clicks": 32070,
+  "sessions": 24645,
+  "starts": 5548,
+  "spend": 274000,
+  "status": {
+   "confirmed": 2500,
+   "cancelled": 183,
+   "waitlisted": 88,
+   "interested": 29
+  },
+  "visitors": 2050,
+  "engaged": 3317,
+  "by_campaign": {
+   "C01": {
+    "regs": 520,
+    "spend": 42000
+   },
+   "C02": {
+    "regs": 680,
+    "spend": 93000
+   },
+   "C03": {
+    "regs": 350,
+    "spend": 59000
+   },
+   "C04": {
+    "regs": 450,
+    "spend": 31000
+   },
+   "C05": {
+    "regs": 350,
+    "spend": 19000
+   },
+   "C06": {
+    "regs": 250,
+    "spend": 14000
+   },
+   "C07": {
+    "regs": 200,
+    "spend": 16000
+   }
+  },
+  "regs_last7": 279,
+  "regs_last7_by": {
+   "C01": 44,
+   "C02": 19,
+   "C03": 43,
+   "C04": 65,
+   "C05": 61,
+   "C06": 25,
+   "C07": 22
+  },
+  "spend_last7": 23600,
+  "regs_last14": 610,
+  "spend_last14": 46000,
+  "last14_by": {
+   "C01": {
+    "regs": 97,
+    "spend": 3300
+   },
+   "C02": {
+    "regs": 60,
+    "spend": 16200
+   },
+   "C03": {
+    "regs": 88,
+    "spend": 12200
+   },
+   "C04": {
+    "regs": 152,
+    "spend": 5800
+   },
+   "C05": {
+    "regs": 125,
+    "spend": 3900
+   },
+   "C06": {
+    "regs": 43,
+    "spend": 1400
+   },
+   "C07": {
+    "regs": 45,
+    "spend": 3200
+   }
+  }
+ },
+ "2025-02-14": {
+  "identified": 975,
+  "identified_campaign": 975,
+  "registrations": 539,
+  "impressions": 181967,
+  "clicks": 5811,
+  "sessions": 4439,
+  "starts": 1069,
+  "spend": 62725,
+  "status": {
+   "confirmed": 397,
+   "interested": 101,
+   "cancelled": 29,
+   "waitlisted": 12
+  },
+  "visitors": 0,
+  "engaged": 779,
+  "by_campaign": {
+   "C01": {
+    "regs": 138,
+    "spend": 17200
+   },
+   "C02": {
+    "regs": 222,
+    "spend": 24000
+   },
+   "C03": {
+    "regs": 32,
+    "spend": 6100
+   },
+   "C04": {
+    "regs": 55,
+    "spend": 7875
+   },
+   "C05": {
+    "regs": 6,
+    "spend": 1950
+   },
+   "C06": {
+    "regs": 86,
+    "spend": 5600
+   },
+   "C07": {
+    "regs": 0,
+    "spend": 0
+   }
+  },
+  "regs_last7": 254,
+  "regs_last7_by": {
+   "C01": 47,
+   "C02": 116,
+   "C03": 32,
+   "C04": 29,
+   "C05": 6,
+   "C06": 24
+  },
+  "spend_last7": 16600,
+  "regs_last14": 443,
+  "spend_last14": 51775,
+  "last14_by": {
+   "C01": {
+    "regs": 94,
+    "spend": 12900
+   },
+   "C02": {
+    "regs": 222,
+    "spend": 24000
+   },
+   "C03": {
+    "regs": 32,
+    "spend": 6100
+   },
+   "C04": {
+    "regs": 46,
+    "spend": 4725
+   },
+   "C05": {
+    "regs": 6,
+    "spend": 1950
+   },
+   "C06": {
+    "regs": 43,
+    "spend": 2100
+   },
+   "C07": {
+    "regs": 0,
+    "spend": 0
+   }
+  }
+ },
+ "confirmed_at_start": 2500
+}

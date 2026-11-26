@@ -119,6 +119,15 @@ export function seedTasks(): TaskDoc[] {
   ];
 }
 
+/** Invalidates every instance's in-memory dataset (see lib/analytics/load.ts). */
+async function bumpVersion(db: Db) {
+  await db.collection(APP_COLLECTIONS.meta).updateOne(
+    { _id: "data_version" as never },
+    { $inc: { v: 1 }, $set: { at: new Date() } },
+    { upsert: true },
+  );
+}
+
 async function insertChunked(db: Db, name: string, docs: Document[]) {
   for (let i = 0; i < docs.length; i += CHUNK) {
     await db.collection(name).insertMany(docs.slice(i, i + CHUNK), { ordered: false });
@@ -169,6 +178,7 @@ export async function writeDataset(db: Db, data: ParsedDataset, meta: { sha256: 
     { sha256: meta.sha256, imported_at: new Date(), counts },
     { upsert: true },
   );
+  await bumpVersion(db);
   await db.collection(APP_COLLECTIONS.activity).insertOne({
     entity: "dataset",
     entity_id: "all",
@@ -217,6 +227,7 @@ export async function resetFromBaseline(db: Db, actor: "user" | "system" = "user
   );
 
   if (Object.values(method).includes("copy")) await ensureIndexes(db);
+  await bumpVersion(db);
   await db.collection(APP_COLLECTIONS.activity).insertOne({
     entity: "dataset",
     entity_id: "all",

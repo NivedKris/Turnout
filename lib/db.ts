@@ -19,6 +19,9 @@ function createClient(): Promise<MongoClient> {
     minPoolSize: 0,
     maxIdleTimeMS: 5_000,
     serverSelectionTimeoutMS: 8_000,
+    // Wire compression: the dataset is repetitive text and compresses well, which
+    // keeps Atlas M0's weekly transfer cap (10 GB out) out of reach.
+    compressors: ["zlib"],
     appName: "turnout",
   });
   attachDatabasePool(client);
