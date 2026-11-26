@@ -69,6 +69,8 @@ export function TerminalView() {
             }}
             showAssumptions={asm}
             showClaims={claims}
+            renderDetail={(id) => <Inspector trace={trace} id={id} opts={{ assumptions: asm, claims }} />}
+            onClose={() => setNode(null)}
           />
         ) : (
           <div className="flex h-full items-center justify-center p-6 text-center text-[13px] text-fg-3">
@@ -81,11 +83,6 @@ export function TerminalView() {
   const verdictEl = (
     <section className="flex min-h-0 min-w-0 flex-col overflow-y-auto rounded-xl border border-line bg-surface p-4" aria-label="Verdict">
       {trace ? <Verdict trace={trace} /> : <p className="text-[13px] text-fg-3">No turn yet.</p>}
-      {trace && node && (
-        <div className="mt-4 border-t border-line pt-3">
-          <Inspector trace={trace} id={node} opts={{ assumptions: asm, claims }} />
-        </div>
-      )}
     </section>
   );
   const tapeEl = (
@@ -97,7 +94,7 @@ export function TerminalView() {
           .sort((a, b) => a.t - b.t)
           .map((n) => (
             <li key={n.id}>
-              <button onClick={() => setNode(n.id)} className="w-full truncate text-left hover:text-fg">
+              <button onClick={() => (setNode(n.id), setMode((m) => (m === "chat" ? "split" : m)))} className="w-full truncate text-left hover:text-fg">
                 <span className="text-fg-3">{clock(trace.started_at, n.t)}</span>{" "}
                 <span className={n.status === "fallback" || n.status === "error" ? "text-fg underline decoration-dotted" : "text-fg-2"}>
                   {n.kind.toUpperCase().padEnd(6, " ")} {n.label}

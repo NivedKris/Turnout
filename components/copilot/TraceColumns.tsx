@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Trace, TraceNode, TraceNodeKind } from "@/lib/copilot/trace-types";
 import { collapse } from "./TraceGraph";
 
@@ -41,16 +41,26 @@ export function TraceColumns({
   onSelect,
   showAssumptions,
   showClaims,
+  renderDetail,
+  onClose,
 }: {
   trace: Trace;
   selected: string | null;
   onSelect: (id: string) => void;
   showAssumptions: boolean;
   showClaims: boolean;
+  /** Detail card rendered next to the selected step. */
+  renderDetail?: (id: string) => ReactNode;
+  onClose?: () => void;
 }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(900);
   const [hover, setHover] = useState<string | null>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
+  // Bring the detail card into view when a step is selected.
+  useEffect(() => {
+    if (selected) detailRef.current?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+  }, [selected]);
   useEffect(() => {
     const el = wrap.current;
     if (!el) return;
@@ -157,6 +167,34 @@ export function TraceColumns({
             </button>
           );
         })}
+        {/* detail card anchored to the selected step */}
+        {selected && renderDetail && (() => {
+          const c = cards.find((x) => x.n.id === selected);
+          if (!c) return null;
+          const CW = 340;
+          const right = c.x + colW + 14 + CW <= Math.max(innerW, w);
+          const left = right ? c.x + colW + 14 : Math.max(8, c.x - CW - 14);
+          const top = Math.max(HEAD, Math.min(c.y - 12, height - 60));
+          return (
+            <div
+              ref={detailRef}
+              role="dialog"
+              aria-label={`Details for ${c.n.label}`}
+              className="absolute z-20 flex max-h-[360px] flex-col rounded-xl border-2 border-fg bg-surface shadow-[0_10px_40px_rgba(0,0,0,0.35)]"
+              style={{ left, top, width: CW }}
+            >
+              <span
+                aria-hidden
+                className="absolute top-5 h-3 w-3 rotate-45 border-fg bg-surface"
+                style={right ? { left: -7, borderLeftWidth: 2, borderBottomWidth: 2 } : { right: -7, borderRightWidth: 2, borderTopWidth: 2 }}
+              />
+              <button onClick={onClose} aria-label="Close details" className="absolute right-2 top-2 rounded-full px-2 text-[14px] text-fg-3 hover:text-fg">
+                ✕
+              </button>
+              <div className="min-h-0 overflow-y-auto p-4 pr-8">{renderDetail(selected)}</div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

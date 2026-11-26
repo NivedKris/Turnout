@@ -224,6 +224,9 @@ export function Inspector({ trace, id, opts = { assumptions: false, claims: fals
         <span className="bg-fg px-1 text-[9px] font-bold tracking-widest text-bg">{TAG[n.kind]}</span>
         <span className="truncate text-fg">{n.label}</span>
       </div>
+      {typeof n.detail?.reason === "string" && <p className="font-sans text-[14px] leading-snug text-fg">{n.detail.reason as string}</p>}
+      {typeof n.detail?.formula === "string" && <p className="font-sans text-[13px] leading-snug text-fg-2">{n.detail.formula as string}</p>}
+      {n.kind === "assumption" && typeof n.detail?.text === "string" && <p className="font-sans text-[14px] leading-snug text-fg">{n.detail.text as string}</p>}
       {n.sub && <p className="text-fg-2">{n.sub}</p>}
       <p className="text-fg-3">
         t+{n.t}ms · status {n.status ?? "—"} · id {n.id}
