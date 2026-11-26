@@ -11,7 +11,8 @@
     "seed": "tsx --conditions=react-server --env-file=.env scripts/seed.ts",
     "typecheck": "tsc --noEmit",
     "verify-seed": "tsx --conditions=react-server --env-file=.env scripts/verify-seed.ts",
-    "report": "tsx scripts/engine-report.mts"
+    "report": "tsx scripts/engine-report.mts",
+    "eval": "tsx --conditions=react-server --env-file=.env scripts/eval-copilot.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.110",
