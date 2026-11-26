@@ -196,8 +196,7 @@ The first eval scored 23/30; its failures led to four fixes. The remaining failu
 | Google AI Studio: Gemini 3.8 / 3.5 Flash, Gemini Live | **free tier** |
 | Vercel AI SDK 7 · Zod 4 · mathjs · Tailwind 4 · React Flow + dagre | open source |
 | React Bits (13 components) · Doto & Geist fonts | MIT + Commons Clause · SIL OFL |
-| Vitest · Playwright · TeX Live (Docker) | open source |
-| Claude Code (Anthropic) | _[plan]_, implementation pair |
+| Vitest · Playwright | open source |
 
 **Reused, modified and verified:**
 - **Reused:** the Next.js scaffold, React Bits, React Flow, dagre and the fonts.
