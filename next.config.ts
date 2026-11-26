@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  // The seed route reads the original workbook from disk, so ship it with that function.
+  outputFileTracingIncludes: {
+    "/api/admin/seed": ["./data/original/**"],
+  },
+  serverExternalPackages: ["exceljs"],
   turbopack: {
     rules: {
       "*.css": {
