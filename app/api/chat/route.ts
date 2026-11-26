@@ -1,4 +1,7 @@
-import { convertToModelMessages, createUIMessageStream, createUIMessageStreamResponse, isStepCount, streamText, toUIMessageStream, type UIMessage } from "ai";
+import { z } from "zod";
+import { describeSitemap } from "@/lib/assistant/sitemap";
+import { entitiesOf } from "@/lib/assistant/catalogue";
+import { convertToModelMessages, createUIMessageStream, createUIMessageStreamResponse, isStepCount, streamText, tool, toUIMessageStream, type UIMessage } from "ai";
 import { buildSnapshot } from "@/lib/analytics";
 import { loadDataset } from "@/lib/analytics/load";
 import { groundClaims } from "@/lib/copilot/claims";
@@ -70,7 +73,20 @@ export async function POST(req: Request) {
       });
       rec.flush();
 
-      const tools = buildTools({ ds, asOf, rec });
+      // navigate / offer_navigation have no execute: the browser runs them and posts the result back.
+      const dest = {
+        screen: z.string().describe("Screen key: overview, funnel, campaigns, campaign, metric, plan, bets, bet, planner, decisions, tasks, team, terminal, activity, settings"),
+        campaign: z.string().optional().describe("Campaign id or name as written, for screen=campaign"),
+        bet: z.string().optional().describe("Bet id or title, for screen=bet"),
+        metric: z.string().optional().describe("Metric key for screen=metric: reg, vis, idn, spd, cpr, shw, ctr, cnf"),
+        filter_campaign: z.string().optional().describe("Campaign to filter the funnel screen"),
+        as_of: z.string().optional().describe("Optional data date YYYY-MM-DD"),
+      };
+      const tools = {
+        ...buildTools({ ds, asOf, rec }),
+        navigate: tool({ description: "Open a screen in the app NOW. Use for commands: take me, open, show me, go to.", inputSchema: z.object(dest) }),
+        offer_navigation: tool({ description: "For 'where can I find…' questions: show a 'Take me there?' button instead of navigating.", inputSchema: z.object({ ...dest, question: z.string().optional() }) }),
+      };
       const active = routeTools(userTexts);
       rec.update("q", { sub: `tools offered: ${active.join(", ")}` });
       const result = streamText({
@@ -88,7 +104,7 @@ export async function POST(req: Request) {
           daysToEvent: s.daysToEvent,
           campaigns: s.campaigns.map((c) => ({ id: c.campaign_id, name: c.campaign_name, owner: c.owner_name })),
           today: new Date().toISOString().slice(0, 10),
-        }),
+        }) + (active.includes("navigate") ? `\n\n${describeSitemap(entitiesOf(ds))}\nCommands (take me to, open, show me) → call navigate. "Where is…" → answer in one sentence and call offer_navigation. After navigating, say in one sentence what is on that screen.` : ""),
         messages: await convertToModelMessages(modelView),
         tools,
         activeTools: active,

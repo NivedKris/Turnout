@@ -1,3 +1,4 @@
+import { ReportScreen } from "@/components/assistant/screen";
 import { Suspense } from "react";
 import { FunnelBars } from "@/components/matrix/FunnelBars";
 import { FilterBar, PillFilter } from "@/components/shell/FilterBar";
@@ -36,6 +37,7 @@ async function FunnelDetail({ searchParams }: PageProps<"/funnel">) {
 
   return (
     <Page>
+      <ReportScreen title={campaignName ? `Funnel · ${campaignName}` : "Funnel"} details={b ? `Bottleneck: ${b.label ?? b.key}` : undefined} items={v.campaigns.map((c) => ({ id: c.id, label: c.name, kind: "campaign" }))} />
       <PageHeader title="Funnel" subtitle={campaignName ? `How people move from first contact to the gate, for ${campaignName}.` : "How people move from first contact to the gate, across all campaigns."} />
       <FilterBar asOf={v.meta.asOf} min={v.meta.historyStart} max={v.meta.historyEnd} presets={v.meta.presets}>
         <PillFilter param="campaign" label="Campaign" value={v.campaignId ?? ""} options={[{ value: "", label: "All" }, ...v.campaigns.map((c) => ({ value: c.id, label: c.name }))]} />

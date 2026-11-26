@@ -1,3 +1,4 @@
+import { ReportScreen } from "@/components/assistant/screen";
 import { Suspense } from "react";
 import { FunnelBars } from "@/components/matrix/FunnelBars";
 import { GlyphIcon } from "@/components/matrix/primitives";
@@ -27,6 +28,7 @@ async function Plan({ searchParams }: PageProps<"/plan">) {
   const computed = Object.fromEntries(r.segments.map((sg) => [sg.key, { registrations: sg.registrations, share: sg.share }]));
   return (
     <Page>
+      <ReportScreen title="Goal plan" items={r.segments.map((sg) => ({ id: sg.key, label: sg.name, kind: "segment" }))} />
       <PageHeader title="How high can we aim?" subtitle="The plan built bottom-up: who we can reach in Bengaluru, how many convert at each step, and what the venue can hold." />
       <FilterBar asOf={v.meta.asOf} min={v.meta.historyStart} max={v.meta.historyEnd} presets={v.meta.presets} />
 

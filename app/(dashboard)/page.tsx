@@ -1,3 +1,4 @@
+import { ReportScreen } from "@/components/assistant/screen";
 import Link from "next/link";
 import { Suspense } from "react";
 import { FunnelBars } from "@/components/matrix/FunnelBars";
@@ -30,6 +31,7 @@ async function Overview({ searchParams }: { searchParams: PageProps<"/">["search
 
   return (
     <Page>
+      <ReportScreen title="Overview" details={`As of ${m.asOf}. Tiles: ${v.tiles.map((t) => `${t.label} ${t.value ?? "—"} (${t.status})`).join("; ")}`} items={v.actions.map((a) => ({ id: a.id, label: a.title, kind: "action" }))} />
       <PageHeader
         eyebrow={`${m.festival} · ${m.city} · ${dayLabel(m.eventStartDay)} – ${dayLabel(m.eventEndDay)}`}
         title={headline(v)}

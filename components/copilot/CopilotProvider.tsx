@@ -1,8 +1,10 @@
 "use client";
 
 import { useChat, type UseChatHelpers } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
-import { useSearchParams } from "next/navigation";
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from "ai";
+import { useRouter, useSearchParams } from "next/navigation";
+import { runScreenTool } from "@/components/assistant/screen";
+import { assistant } from "@/components/assistant/store";
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Trace } from "@/lib/copilot/trace-types";
 
@@ -51,7 +53,30 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
       }),
     [id],
   );
-  const chat = useChat<CopilotMessage>({ id, transport });
+  const router = useRouter();
+  const routerRef = useRef(router);
+  useEffect(() => {
+    routerRef.current = router;
+  });
+  const chatRef = useRef<UseChatHelpers<CopilotMessage> | null>(null);
+  const chat = useChat<CopilotMessage>({
+    id,
+    transport,
+    // navigate / offer_navigation run here in the browser; the reply continues automatically.
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+    onToolCall: async ({ toolCall }) => {
+      if (toolCall.dynamic || (toolCall.toolName !== "navigate" && toolCall.toolName !== "offer_navigation")) return;
+      if (!assistant.get().entities) {
+        try {
+          assistant.set({ entities: await (await fetch("/api/assistant/entities")).json() });
+        } catch {}
+      }
+      const r = routerRef.current;
+      const output = await runScreenTool(toolCall.toolName, toolCall.input as Record<string, unknown>, { push: (p) => r.push(p), back: () => r.back(), refresh: () => r.refresh() });
+      void chatRef.current?.addToolOutput({ tool: toolCall.toolName as never, toolCallId: toolCall.toolCallId, output: output as never });
+    },
+  });
+  chatRef.current = chat;
 
   // Command bar free text and "ask" buttons dispatch this event.
   const ask = (text: string) => {
@@ -65,7 +90,7 @@ export function CopilotProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const onAsk = (e: Event) => askRef.current(String((e as CustomEvent).detail ?? ""));
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "j") {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "i") {
         e.preventDefault();
         setOpen((o) => !o);
       }

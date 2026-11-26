@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { IntroGate } from "@/components/brand/BootScreen";
-import { CopilotButton, CopilotDrawer } from "@/components/copilot/CopilotDrawer";
+import { AssistantDock } from "@/components/assistant/AssistantDock";
+import { CopilotDrawer } from "@/components/copilot/CopilotDrawer";
 import { CopilotProvider } from "@/components/copilot/CopilotProvider";
 import { Wordmark } from "@/components/brand/Logo";
 import { CommandBar } from "@/components/shell/CommandBar";
@@ -23,7 +24,6 @@ export default function DashboardLayout({ children }: LayoutProps<"/">) {
           </Suspense>
         </div>
         <div className="ml-auto flex items-center gap-3">
-          <CopilotButton />
           <ThemeToggle />
         </div>
       </header>
@@ -35,10 +35,11 @@ export default function DashboardLayout({ children }: LayoutProps<"/">) {
             </Suspense>
           </div>
         </aside>
-        <main className="relative min-w-0 flex-1">{children}</main>
+        <main className="relative min-w-0 flex-1 pb-20">{children}</main>
       </div>
       <IntroGate />
       <CopilotDrawer />
+      <AssistantDock />
     </div>
     </CopilotProvider>
     </Suspense>

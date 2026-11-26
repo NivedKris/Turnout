@@ -1,3 +1,4 @@
+import { ReportScreen } from "@/components/assistant/screen";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Page, PageHeader, PageSkeleton } from "@/components/ui/page";
@@ -22,6 +23,7 @@ async function Campaigns({ searchParams }: PageProps<"/campaigns">) {
   const v = await campaignsView(typeof sp.asOf === "string" ? sp.asOf : undefined);
   return (
     <Page>
+      <ReportScreen title="Campaigns" items={v.rows.map((c) => ({ id: c.campaign_id, label: `${c.campaign_name} · ${c.verdict} · CPR 14d ${c.cpr_14d ?? "—"}`, kind: "campaign" }))} />
       <PageHeader title="Campaigns" subtitle="Every campaign, judged on its cost per registration over the last 14 days." actions={<Link href={withAsOf("/campaigns/new", v.meta.asOf)} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg">+ New campaign</Link>} />
       <FilterBar asOf={v.meta.asOf} min={v.meta.historyStart} max={v.meta.historyEnd} presets={v.meta.presets} />
       <Panel code="LIST" title="All campaigns · rule verdicts from the last 14 days">

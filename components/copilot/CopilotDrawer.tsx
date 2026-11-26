@@ -6,7 +6,7 @@ import { withAsOf } from "@/components/shell/nav";
 import { ChatPane } from "./ChatPane";
 import { useCopilot } from "./CopilotProvider";
 
-/** Right-side glass drawer (⌘J). "View trace" jumps to the terminal with that trace selected. */
+/** Right-side glass drawer (⌘I). "View trace" jumps to the terminal with that trace selected. */
 export function CopilotDrawer() {
   const { open, setOpen, setSelectedTrace, asOf } = useCopilot();
   const router = useRouter();
@@ -56,7 +56,7 @@ export function CopilotButton() {
       aria-controls="tn-copilot"
       className="flex items-center gap-2 rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg hover:opacity-90"
     >
-      Ask AI <kbd className="font-mono text-[11px] opacity-60">⌘J</kbd>
+      Ask AI <kbd className="font-mono text-[11px] opacity-60">⌘I</kbd>
     </button>
   );
 }

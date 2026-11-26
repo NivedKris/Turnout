@@ -169,6 +169,18 @@ See [docs/research.md](docs/research.md). Every number there is labelled *Source
 - **Honest uncertainty.** The system prompt makes `get_data_coverage` mandatory before saying the data can't answer, and requires correlation to be distinguished from causation.
 - **Eval:** see §10.
 
+### 8b. Voice assistant (Gemini Live)
+
+A Turnout mark sits bottom-centre on every screen. **⌘J** (or a tap) starts a voice session; **⌘I** opens the typed copilot.
+
+- **One catalogue, three kinds of tool.** READ tools are the copilot's engine tools, run on the server (`/api/assistant/tool`). WRITE tools (`propose_*`) return drafts only: the browser turns each draft into a proposal card, and nothing is saved until the person says yes (`confirm_change`) or presses Accept. SCREEN tools run in the browser: `navigate`, `offer_navigation`, `get_screen`, `go_back`, `confirm_change`, `reject_change` and `show_details`.
+- **Commands navigate, questions offer.** "Take me to paid social" opens the campaign. "Where are the decisions?" shows a *Take me there?* card. Spoken names are fuzzy-matched to campaigns and bets, and the as-of date is carried along.
+- **Screen awareness.** Every page reports its title and the items it lists (`ReportScreen`), so "the second one" or "what am I looking at" resolves against what is on screen.
+- **Security.** The Gemini key stays on the server. The browser gets a single-use ephemeral token from `/api/assistant/token`, which expires within minutes.
+- **Turn-taking.** Microphone audio is captured in an AudioWorklet and sent as 16 kHz PCM. A noise floor is calibrated on start. The end of speech is signalled explicitly (at least 500 ms of speech followed by 1 s of quiet), and upload pauses until the reply has finished playing. An 8 s watchdog recovers from a turn that produces nothing. A turn that closes while a tool is still running is ignored, and the model is nudged once if it acts but says nothing.
+- **States** are shown by the dot on the mark: green at rest, mint listening, amber thinking, blue speaking, red error. Long answers go to a card on screen and only a short summary is spoken.
+- **Chat parity.** The typed copilot has the same `navigate` and `offer_navigation` tools, run in the browser.
+
 ## 9. Setup
 
 ```bash
@@ -209,6 +221,8 @@ All analytics endpoints take `?asOf=YYYY-MM-DD`.
 | `npm run verify-seed` | Headline numbers computed straight from MongoDB |
 | `npm run eval` | The **copilot eval**: 30 cases across lookup, calculation, comparison, diagnosis, recommendation, follow-up, action, unanswerable, ambiguous, data quality and *after a data change*. Expected values are computed by the engine at run time. Results: [docs/eval-results.md](docs/eval-results.md) |
 | `node scripts/shot.mjs` / `scripts/shot-copilot.mjs` | Real-browser screenshots, including driving the copilot terminal |
+| `node scripts/assistant/voice-e2e.mjs <outDir>` | Voice assistant in real Chrome with a fake microphone (dev server): navigate by name, a data question, a proposal and a spoken "no". Latest run: 5/5 |
+| `node --env-file=.env --import tsx scripts/assistant/live-probe.mts` | Gemini Live connection, tool call and spoken answer from Node |
 
 **Eval result (latest run):** **29/30 passed (96.7%)**. 172 of 193 numeric claims (89.1%) were grounded in tool output. The first run scored 23/30; its failures led to four fixes, listed in the git history. The remaining miss is ambiguity handling ("the partners campaign"), which has since been tightened in the prompt and the tool.
 

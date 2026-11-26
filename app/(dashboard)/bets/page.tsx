@@ -1,3 +1,4 @@
+import { ReportScreen } from "@/components/assistant/screen";
 import Link from "next/link";
 import { Suspense } from "react";
 import { StatusBadge } from "@/components/matrix/Metric";
@@ -27,6 +28,7 @@ async function Bets({ searchParams }: PageProps<"/bets">) {
   const camp = new Map(v.campaigns.map((c) => [c.id, c.name]));
   return (
     <Page>
+      <ReportScreen title="Bets" items={v.evaluations.map((e) => ({ id: e.bet_id, label: `#${e.rank} ${e.title} · ${e.verdict}`, kind: "bet" }))} />
       <PageHeader
         title="Bets"
         subtitle={`${v.evaluations.length} ranked strategies. Each one is judged live by its early signals. Planned: ${inr(v.totals.budget)} for +${num(v.totals.expected_visitors)} visitors.`}

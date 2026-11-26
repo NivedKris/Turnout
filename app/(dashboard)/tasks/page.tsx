@@ -1,3 +1,4 @@
+import { ReportScreen } from "@/components/assistant/screen";
 import { Suspense } from "react";
 import { Page, PageHeader, PageSkeleton } from "@/components/ui/page";
 import { FilterBar } from "@/components/shell/FilterBar";
@@ -21,6 +22,7 @@ async function Tasks({ searchParams }: PageProps<"/tasks">) {
   const overdue = v.tasks.filter((t) => t.overdue).length;
   return (
     <Page>
+      <ReportScreen title="Tasks" items={v.tasks.map((t) => ({ id: t.task_id, label: `${t.title} · ${t.owner_name} · ${t.status}${t.overdue ? " · overdue" : ""}`, kind: "task" }))} />
       <PageHeader title="Tasks" subtitle={`${v.tasks.length} tasks · ${open} open · ${overdue} overdue at the selected date`} />
       <FilterBar asOf={v.meta.asOf} min={v.meta.historyStart} max={v.meta.historyEnd} presets={v.meta.presets} />
       <TaskBoard v={v} />

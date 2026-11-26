@@ -27,9 +27,12 @@ export type ToolName =
   | "get_weekly_drivers"
   | "list_decisions"
   | "get_team"
-  | "propose_decision";
+  | "propose_decision"
+  | "navigate"
+  | "offer_navigation";
 
 const ROUTES: { re: RegExp; tools: ToolName[] }[] = [
+  { re: /take me|open (the|my)?|show me|go to|pull up|let me see|navigate|where (can|do|is|are)|how do i (get|find)/i, tools: ["navigate", "offer_navigation"] },
   { re: /\bbets?\b|strateg|initiative|experiment|idea|double down|deprioriti|rice|hypothes|signal|leading indicator|early warning/i, tools: ["list_bets", "get_bet"] },
   { re: /plan\b|goal model|how high|aim|audience|segment|potential|bottom.?up|capacity|base case|stretch case/i, tools: ["get_goal_model"] },
   { re: /decision|decided|did .* work|work(ed)?\?|outcome|result of|after we/i, tools: ["list_decisions", "get_bet", "propose_decision"] },

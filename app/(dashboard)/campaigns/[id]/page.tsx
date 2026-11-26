@@ -1,3 +1,4 @@
+import { ReportScreen } from "@/components/assistant/screen";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -32,6 +33,7 @@ async function CampaignTerminal({ params, searchParams }: PageProps<"/campaigns/
   const f = (n: number | null) => (isCpr ? inr(n) : pct(n));
   return (
     <Page>
+      <ReportScreen title={`Campaign ${c.campaign_id} ${c.campaign_name}`} details={`Owner ${c.owner_name}, status ${c.status}, rule verdict ${r.verdict}: ${r.reason}`} items={v.tasks.map((tk) => ({ id: tk.task_id, label: `${tk.title} · ${tk.status}`, kind: "task" }))} />
       <PageHeader
         eyebrow={`${c.channel.replaceAll("_", " ")} · owner ${c.owner_name} · ${c.status}`}
         title={c.campaign_name}

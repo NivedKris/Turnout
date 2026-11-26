@@ -123,6 +123,13 @@ body {
 }
 
 /* Glass panel for drawers and modals */
+.tn-dock {
+  background: color-mix(in srgb, var(--surface-2) 94%, transparent);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
 .tn-glass {
   background: color-mix(in srgb, var(--surface-2) 70%, transparent);
   backdrop-filter: blur(20px);
@@ -192,4 +199,27 @@ body {
 .tn-trace {
   background-image: radial-gradient(circle, color-mix(in srgb, var(--text) 9%, transparent) 0.8px, transparent 1.1px);
   background-size: 12px 12px;
+}
+
+/* ── in-app assistant ── */
+.tn-edge-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  pointer-events: none;
+  box-shadow: inset 0 0 60px 6px rgba(110, 231, 183, 0.22);
+  animation: tn-glow 2.4s ease-in-out infinite;
+}
+.tn-edge-think { box-shadow: inset 0 0 60px 6px rgba(245, 158, 11, 0.2); }
+@keyframes tn-glow { 50% { opacity: 0.55; } }
+.tn-card-in { animation: tn-card-in 220ms ease-out; }
+@keyframes tn-card-in { from { opacity: 0; transform: translateY(8px); } }
+.tn-travel > div { animation: tn-travel 1.1s ease-out forwards; }
+@keyframes tn-travel {
+  0% { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  15%, 75% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tn-edge-glow, .tn-card-in, .tn-travel > div { animation: none; }
 }

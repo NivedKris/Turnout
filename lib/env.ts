@@ -11,6 +11,8 @@ const schema = z.object({
   GROQ_API_KEY: z.string().min(1).optional(),
   GROQ_API_KEY2: z.string().min(1).optional(),
   GOOGLE_API_KEY_2: z.string().min(1).optional(),
+  /** Separate key for the voice assistant so it can't starve the copilot. */
+  ASSISTANT_GEMINI_API_KEY: z.string().min(1).optional(),
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1).optional(),
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
   /** Comma-separated provider chain, tried in order. */

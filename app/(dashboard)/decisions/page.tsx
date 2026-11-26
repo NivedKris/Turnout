@@ -1,3 +1,4 @@
+import { ReportScreen } from "@/components/assistant/screen";
 import Link from "next/link";
 import { Suspense } from "react";
 import { GlyphIcon, OriginBadge } from "@/components/matrix/primitives";
@@ -27,6 +28,7 @@ async function Decisions({ searchParams }: PageProps<"/decisions">) {
   const improved = measured.filter((r) => r.outcome.improved).length;
   return (
     <Page>
+      <ReportScreen title="Decisions" items={v.rows.map((d) => ({ id: d.decision_id, label: `${d.decision.toUpperCase()} ${d.title} (${d.as_of})`, kind: "decision" }))} />
       <PageHeader
         title="Decisions"
         subtitle={measured.length ? `${improved} of ${measured.length} measured decisions improved their metric in the following week.` : "Every scale, change or stop call, with the evidence at the time and what happened next."}

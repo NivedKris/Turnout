@@ -1,3 +1,4 @@
+import { ReportScreen } from "@/components/assistant/screen";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -57,6 +58,7 @@ async function KpiDetail({ params, searchParams }: PageProps<"/kpi/[key]">) {
 
   return (
     <Page>
+      <ReportScreen title={`Metric: ${def.label}`} items={rows.map((c) => ({ id: c.campaign_id, label: `${c.campaign_name} · ${c.value ?? "—"}`, kind: "campaign" }))} />
       <PageHeader
         eyebrow="Metric"
         title={def.label}

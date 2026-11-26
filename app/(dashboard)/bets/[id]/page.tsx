@@ -1,3 +1,4 @@
+import { ReportScreen } from "@/components/assistant/screen";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -30,6 +31,7 @@ async function BetDetail({ params, searchParams }: PageProps<"/bets/[id]">) {
   const campName = new Map(v.campaigns.map((c) => [c.id, c.name]));
   return (
     <Page>
+      <ReportScreen title={`Bet ${b.bet_id} ${b.title}`} details={`Status ${b.status}, verdict ${e.verdict}: ${e.verdict_reason}`} items={e.signals.map((sg) => ({ id: sg.key, label: `${sg.label} · ${sg.state}`, kind: "signal" }))} />
       <PageHeader
         eyebrow={`Bet #${b.rank} · ${b.status} · owner ${b.owner_name}`}
         title={b.title}

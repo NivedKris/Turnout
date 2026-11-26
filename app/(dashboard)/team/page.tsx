@@ -1,3 +1,4 @@
+import { ReportScreen } from "@/components/assistant/screen";
 import Link from "next/link";
 import { Suspense } from "react";
 import { StatusBadge } from "@/components/matrix/Metric";
@@ -22,6 +23,7 @@ async function Team({ searchParams }: PageProps<"/team">) {
   const v = await ownersView(typeof sp.asOf === "string" ? sp.asOf : undefined);
   return (
     <Page>
+      <ReportScreen title="Team" items={v.owners.map((o) => ({ id: o.owner_name, label: o.owner_name, kind: "owner" }))} />
       <PageHeader title="Team" subtitle="Who owns what: campaigns and their verdicts, bets, and open work." />
       <FilterBar asOf={v.meta.asOf} min={v.meta.historyStart} max={v.meta.historyEnd} presets={v.meta.presets} />
       <div className="grid gap-4 lg:grid-cols-2">
