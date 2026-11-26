@@ -1,5 +1,6 @@
 import type { Dataset } from "../analytics/types";
 import { DEFAULT_SETTINGS, seedTasks } from "./load";
+import { defaultGoalModel, seedBets, seedDecisions } from "./strategy";
 import type { ParsedDataset } from "./workbook";
 
 /** Turns a parsed workbook straight into an engine Dataset (tests and offline scripts, no DB). */
@@ -21,5 +22,8 @@ export function datasetFromParsed(p: ParsedDataset): Dataset {
     history: p.registration_history as Dataset["history"],
     checkins: p.checkins as Dataset["checkins"],
     tasks: seedTasks(),
+    goalModel: defaultGoalModel(),
+    bets: seedBets(),
+    decisions: seedDecisions(),
   };
 }

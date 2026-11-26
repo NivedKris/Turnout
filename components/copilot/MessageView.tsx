@@ -23,7 +23,7 @@ export function MessageView({ m, onTrace, compact = false }: { m: CopilotMessage
   const tools = m.parts.filter((p) => p.type.startsWith("tool-")) as unknown as ToolPart[];
   const trace = traceOf(m);
   const proposals = tools
-    .filter((t) => (t.type === "tool-propose_task" || t.type === "tool-propose_campaign_update") && t.state === "output-available")
+    .filter((t) => (t.type === "tool-propose_task" || t.type === "tool-propose_campaign_update" || t.type === "tool-propose_decision") && t.state === "output-available")
     .map((t) => t.output as Proposal)
     .filter((p) => p && !("error" in (p as object)));
   return (

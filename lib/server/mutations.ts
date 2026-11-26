@@ -1,7 +1,9 @@
 import "server-only";
 import type { Db, Document } from "mongodb";
 import { getDb } from "../db";
-import { bumpDataVersion } from "../analytics/load";
+import { bumpDataVersion, loadDataset } from "../analytics/load";
+import { buildSnapshot, evaluateBet, signalValue } from "../analytics";
+import { BetInput, BetPatch, DecisionInput, GoalModelPatch } from "../models/strategy";
 import {
   CampaignCreate,
   CampaignPatch,
@@ -321,6 +323,91 @@ export async function updateSettings(input: unknown, actor: Actor = "user") {
     after: p,
     actor,
     summary: `Settings: ${Object.entries(p).map(([k, v]) => `${k} → ${v}`).join(", ")}`,
+  });
+  return { ok: true };
+}
+
+/* ───────────────────────── Strategy: bets, decisions, plan ───────────────────────── */
+
+
+export async function createBet(input: unknown, actor: Actor = "user") {
+  const b = parse(BetInput, input);
+  const db = await getDb();
+  const bet_id = await nextId(db, "bets", "bet_id", "B", 1);
+  const now = new Date();
+  const doc = { ...b, bet_id, origin: actor === "copilot" ? "copilot" : "user", created_at: now, updated_at: now };
+  await db.collection("bets").insertOne(doc);
+  await log(db, { entity: "bet", entity_id: bet_id, action: "create", before: null, after: doc, actor, summary: `Created bet ${bet_id}: ${b.title}` });
+  return { bet_id };
+}
+
+export async function updateBet(betId: string, input: unknown, actor: Actor = "user") {
+  const p = parse(BetPatch, input);
+  const db = await getDb();
+  const before = await db.collection("bets").findOne({ bet_id: betId });
+  if (!before) throw new MutationError(`Bet ${betId} not found`, 404);
+  const set: Document = { ...p, updated_at: new Date() };
+  await db.collection("bets").updateOne({ bet_id: betId }, { $set: set });
+  const changed = Object.keys(p).filter((k) => JSON.stringify(before[k]) !== JSON.stringify((p as Document)[k]));
+  await log(db, {
+    entity: "bet",
+    entity_id: betId,
+    action: "update",
+    before: Object.fromEntries(changed.map((k) => [k, before[k] ?? null])),
+    after: Object.fromEntries(changed.map((k) => [k, (p as Document)[k]])),
+    actor,
+    summary: `Updated bet ${betId} ${before.title}: ${changed.map((k) => (k === "status" ? `status → ${(p as Document).status}` : k)).join(", ")}`,
+  });
+  return { bet_id: betId, changed };
+}
+
+export async function deleteBet(betId: string, actor: Actor = "user") {
+  const db = await getDb();
+  const before = await db.collection("bets").findOne({ bet_id: betId });
+  if (!before) throw new MutationError(`Bet ${betId} not found`, 404);
+  await db.collection("bets").deleteOne({ bet_id: betId });
+  await log(db, { entity: "bet", entity_id: betId, action: "delete", before: strip(before), after: null, actor, summary: `Deleted bet ${betId}: ${before.title}` });
+  return { bet_id: betId };
+}
+
+/** Logs a decision and freezes the evidence (signal values on that data date). */
+export async function createDecision(input: unknown, actor: Actor = "user") {
+  const d = parse(DecisionInput, input);
+  const db = await getDb();
+  const ds = await loadDataset();
+  const s = buildSnapshot(ds, d.as_of);
+  const evidence: Record<string, number | string | null> = { ...d.evidence };
+  const bet = d.bet_id ? ds.bets?.find((b) => b.bet_id === d.bet_id) : undefined;
+  if (d.bet_id && !bet) throw new MutationError(`Bet ${d.bet_id} not found`, 404);
+  if (d.campaign_id && !ds.campaigns.some((c) => c.campaign_id === d.campaign_id)) throw new MutationError(`Campaign ${d.campaign_id} not found`, 404);
+  if (bet) {
+    const e = evaluateBet(bet, s);
+    evidence.bet_verdict = e.verdict;
+    for (const sg of e.signals) evidence[sg.key] = sg.value === null ? null : Math.round(sg.value * 10000) / 10000;
+  }
+  const ids = d.campaign_id ? [d.campaign_id] : (bet?.campaign_ids ?? []);
+  const v = signalValue(s, ids, d.outcome_metric, 7).value;
+  evidence[`${d.outcome_metric}_7d_before`] = v === null ? null : Math.round(v * 10000) / 10000;
+  const decision_id = await nextId(db, "decisions", "decision_id", "D-", 4);
+  const doc = { ...d, evidence, decision_id, actor, origin: actor === "copilot" ? "copilot" : "user", decided_at: new Date() };
+  await db.collection("decisions").insertOne(doc);
+  await log(db, { entity: "decision", entity_id: decision_id, action: "create", before: null, after: doc, actor, summary: `${actor === "copilot" ? "Copilot-proposed decision confirmed" : "Decision"} ${decision_id}: ${d.decision.toUpperCase()} · ${d.title}` });
+  return { decision_id };
+}
+
+export async function updateGoalModel(input: unknown, actor: Actor = "user") {
+  const p = parse(GoalModelPatch, input);
+  const db = await getDb();
+  const before = await db.collection("goal_model").findOne({ _id: "goal_model" as never });
+  await db.collection("goal_model").updateOne({ _id: "goal_model" as never }, { $set: { ...p, updated_at: new Date(), origin: "user" } }, { upsert: true });
+  await log(db, {
+    entity: "goal_model",
+    entity_id: "goal_model",
+    action: "update",
+    before: Object.fromEntries(Object.keys(p).map((k) => [k, before?.[k] ?? null])),
+    after: p,
+    actor,
+    summary: `Plan updated: ${Object.keys(p).join(", ")}`,
   });
   return { ok: true };
 }

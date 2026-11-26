@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createTaskAction, updateCampaignAction } from "@/app/actions";
+import { createDecisionAction, createTaskAction, updateCampaignAction } from "@/app/actions";
 import { Button, Input, Select } from "@/components/ui/form";
 
 type TaskProposal = {
@@ -22,7 +22,14 @@ type CampaignProposal = {
   valid: boolean;
   issues: string[];
 };
-export type Proposal = TaskProposal | CampaignProposal;
+type DecisionProposal = {
+  proposal_id: string;
+  kind: "decision";
+  draft: { decision: string; title: string; rationale: string; bet_id: string | null; campaign_id: string | null; outcome_metric: string; as_of: string; evidence: Record<string, never> };
+  valid: boolean;
+  issues: string[];
+};
+export type Proposal = TaskProposal | CampaignProposal | DecisionProposal;
 
 /**
  * Insight → action: the copilot only drafts. The user confirms, edits or discards here;
@@ -38,17 +45,24 @@ export function ConfirmCard({ p }: { p: Proposal }) {
   const confirm = () =>
     start(async () => {
       setError(null);
-      const r = p.kind === "task" ? await createTaskAction(draft, "copilot") : await updateCampaignAction(p.campaign_id, p.patch, "copilot");
+      const r =
+        p.kind === "task" ? await createTaskAction(draft, "copilot") : p.kind === "decision" ? await createDecisionAction(p.draft, "copilot") : await updateCampaignAction(p.campaign_id, p.patch, "copilot");
       if (r.ok) {
         setState("confirmed");
-        setResult(p.kind === "task" ? `Created ${(r.data as { task_id: string }).task_id}. It's now in TASK and logged in ACT.` : `Updated ${p.campaign_id}. Logged in ACT; analytics recalculated.`);
+        setResult(
+          p.kind === "task"
+            ? `Created ${(r.data as { task_id: string }).task_id}. It's now in Tasks and the activity log.`
+            : p.kind === "decision"
+              ? `Logged ${(r.data as { decision_id: string }).decision_id} with evidence frozen. Its outcome is measured over the next 14 days.`
+              : `Updated ${p.campaign_id}. Logged in the activity log; analytics recalculated.`,
+        );
       } else setError(r.error);
     });
 
   return (
     <div className={`mt-2 border ${state === "pending" ? "border-fg" : "border-line"} bg-bg`} role="group" aria-label="Copilot proposal">
       <div className="flex items-center gap-2 border-b border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em]">
-        <span className="bg-fg px-1 font-bold text-bg">{p.kind === "task" ? "PROPOSED TASK" : "PROPOSED CHANGE"}</span>
+        <span className="bg-fg px-1 font-bold text-bg">{p.kind === "task" ? "PROPOSED TASK" : p.kind === "decision" ? "PROPOSED DECISION" : "PROPOSED CHANGE"}</span>
         <span className="text-fg-3">{state === "pending" ? "awaiting your confirmation" : state}</span>
       </div>
       <div className="flex flex-col gap-2 p-3">
@@ -66,6 +80,17 @@ export function ConfirmCard({ p }: { p: Proposal }) {
             </div>
             {draft.campaign_id && <p className="font-mono text-[11px] text-fg-3">Campaign {draft.campaign_id}</p>}
             <p className="border-l border-fg-3 pl-2 text-[12px] text-fg-2">Why: {draft.source_insight}</p>
+          </>
+        ) : p.kind === "decision" ? (
+          <>
+            <p className="text-[14px] font-semibold">
+              <span className="mr-2 rounded-full bg-fg px-2 py-0.5 text-[11px] uppercase text-bg">{p.draft.decision}</span>
+              {p.draft.title}
+            </p>
+            <p className="font-mono text-[11px] text-fg-3">
+              {p.draft.bet_id ?? ""} {p.draft.campaign_id ?? ""} · data date {p.draft.as_of} · judged by {p.draft.outcome_metric.replaceAll("_", " ")}
+            </p>
+            <p className="border-l border-fg-3 pl-2 text-[12px] text-fg-2">Why: {p.draft.rationale}</p>
           </>
         ) : p.kind === "campaign_update" ? (
           <>

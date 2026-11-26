@@ -10,3 +10,4 @@ export { projection, scenario, targetVsActual, campaignRates, type ScenarioChang
 export { bottleneck, trend, series, TREND_METRICS, type TrendMetric, type StageCheck } from "./diagnose";
 export { evaluateRules, reallocation, type Verdict, type Thresholds, type RuleEvaluation, type Move } from "./rules";
 export { dataCoverage, NOT_IN_DATA } from "./coverage";
+export { goalModel, evaluateBet, evaluateBets, evaluateSignal, signalValue, decisionOutcome, weeklyDrivers, ownerWorkload, type BetEvaluation, type SignalResult, type SignalState, type DecisionOutcome, type Driver, type OwnerLoad, type GoalCase } from "./strategy";

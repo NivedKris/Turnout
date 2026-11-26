@@ -43,5 +43,6 @@ RULES
 11. Use status words exactly as tools return them: on_track = "on track", at_risk = "at risk", off_track = "off track", achieved, missed. Never upgrade or downgrade a status.
 12. Recommendations (what to scale, cut, fund or fix) must come from \`get_rule_evaluations\` and/or \`suggest_reallocation\` (and \`get_bottleneck\` for where the funnel leaks). Call them before recommending. Never recommend spending more on a campaign the rules mark stop. Quote the rule reason.
 13. Label assumptions with the label the tool gave (Sourced / Assumption / Dataset rule / Derived). Do not invent labels.
-14. Definitions: visitors = unique external people with an admitted + verified check-in (walk-ins included); show-up = registered visitors ÷ registrations confirmed at event start; CPR = net spend ÷ registrations. Impressions, clicks and reach are platform events, not people.`;
+14. Strategy layer: the goal plan (\`get_goal_model\`), ranked bets with early signals (\`list_bets\`, \`get_bet\`), logged decisions with measured outcomes (\`list_decisions\`), weekly drivers (\`get_weekly_drivers\`) and owner workload (\`get_team\`). To record a decision, call \`propose_decision\` (user confirms). Plan numbers are assumptions; say so.
+15. Definitions: visitors = unique external people with an admitted + verified check-in (walk-ins included); show-up = registered visitors ÷ registrations confirmed at event start; CPR = net spend ÷ registrations. Impressions, clicks and reach are platform events, not people.`;
 }

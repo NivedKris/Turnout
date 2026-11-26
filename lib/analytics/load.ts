@@ -61,7 +61,7 @@ export async function bumpDataVersion(db: Db): Promise<number> {
 
 export async function loadDatasetUncached(db?: Db): Promise<Dataset> {
   db ??= await getDb();
-  const [event, settings, targets, campaigns, daily, people, interactions, registrations, history, checkins, tasks] =
+  const [event, settings, targets, campaigns, daily, people, interactions, registrations, history, checkins, tasks, goalModel, bets, decisions] =
     await Promise.all([
       db.collection("event").findOne({}, { projection: P.base }),
       db.collection("settings").findOne({ _id: "settings" as never }),
@@ -74,6 +74,9 @@ export async function loadDatasetUncached(db?: Db): Promise<Dataset> {
       all<Dataset["history"][number]>(db, "registration_history", P.history),
       all<Dataset["checkins"][number]>(db, "checkins", P.checkins),
       all<NonNullable<Dataset["tasks"]>[number]>(db, "tasks", P.base),
+      db.collection("goal_model").findOne({ _id: "goal_model" as never }),
+      all<NonNullable<Dataset["bets"]>[number]>(db, "bets", P.base),
+      all<NonNullable<Dataset["decisions"]>[number]>(db, "decisions", P.base),
     ]);
   if (!event) throw new Error("No event document. Seed the database first (npm run seed).");
   return {
@@ -93,6 +96,9 @@ export async function loadDatasetUncached(db?: Db): Promise<Dataset> {
     history,
     checkins,
     tasks,
+    goalModel: (goalModel as unknown as Dataset["goalModel"]) ?? null,
+    bets,
+    decisions,
   };
 }
 

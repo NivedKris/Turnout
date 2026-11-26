@@ -10,6 +10,7 @@ import type {
   TargetDoc,
 } from "../models/source";
 import type { SettingsDoc, TaskDoc } from "../models/app";
+import type { BetDoc, DecisionDoc, GoalModelDoc } from "../models/strategy";
 
 /** Everything the engine needs, loaded once per request. No DB handles inside. */
 export type Dataset = {
@@ -24,6 +25,9 @@ export type Dataset = {
   history: RegistrationHistoryDoc[];
   checkins: CheckinDoc[];
   tasks?: TaskDoc[];
+  goalModel?: GoalModelDoc | null;
+  bets?: BetDoc[];
+  decisions?: DecisionDoc[];
 };
 
 export type AssumptionLabel = "Sourced" | "Assumption" | "Dataset rule" | "Derived";

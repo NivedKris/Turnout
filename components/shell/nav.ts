@@ -1,12 +1,16 @@
 export const NAV = [
-  { href: "/", label: "Overview", code: "OVR", key: "F1" },
-  { href: "/funnel", label: "Funnel", code: "FUNL", key: "F2" },
-  { href: "/campaigns", label: "Campaigns", code: "CMP", key: "F3" },
-  { href: "/tasks", label: "Tasks", code: "TASK", key: "F4" },
-  { href: "/planner", label: "Planner", code: "RALC", key: "F5" },
-  { href: "/activity", label: "Activity", code: "ACT", key: "F6" },
-  { href: "/terminal", label: "Copilot terminal", code: "TERM", key: "F7" },
-  { href: "/settings", label: "Constraints", code: "CFG", key: "F8" },
+  { href: "/", label: "Overview", code: "OVR", group: "Measure" },
+  { href: "/funnel", label: "Funnel", code: "FUNL", group: "Measure" },
+  { href: "/campaigns", label: "Campaigns", code: "CMP", group: "Measure" },
+  { href: "/plan", label: "Goal plan", code: "PLAN", group: "Strategy" },
+  { href: "/bets", label: "Bets", code: "BETS", group: "Strategy" },
+  { href: "/planner", label: "What-if planner", code: "RALC", group: "Strategy" },
+  { href: "/decisions", label: "Decisions", code: "DEC", group: "Execute" },
+  { href: "/tasks", label: "Tasks", code: "TASK", group: "Execute" },
+  { href: "/team", label: "Team", code: "TEAM", group: "Execute" },
+  { href: "/terminal", label: "Copilot terminal", code: "TERM", group: "System" },
+  { href: "/activity", label: "Activity log", code: "ACT", group: "System" },
+  { href: "/settings", label: "Targets & constraints", code: "CFG", group: "System" },
 ] as const;
 
 /** Keep the as-of date when navigating. */

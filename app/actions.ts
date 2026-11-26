@@ -72,3 +72,19 @@ export async function resetDatasetAction() {
     return r.counts;
   });
 }
+
+export async function createBetAction(input: unknown) {
+  return run(() => m.createBet(input));
+}
+export async function updateBetAction(id: string, input: unknown) {
+  return run(() => m.updateBet(id, input));
+}
+export async function deleteBetAction(id: string) {
+  return run(() => m.deleteBet(id));
+}
+export async function createDecisionAction(input: unknown, actor: "user" | "copilot" = "user") {
+  return run(() => m.createDecision(input, actor));
+}
+export async function updateGoalModelAction(input: unknown) {
+  return run(() => m.updateGoalModel(input));
+}

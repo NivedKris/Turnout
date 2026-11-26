@@ -18,6 +18,7 @@ const MAP: Record<string, { glyph: Glyph; label: string }> = {
   keep: { glyph: "solid", label: "Keep" },
   at_risk: { glyph: "half", label: "At risk" },
   change: { glyph: "half", label: "Change" },
+  watch: { glyph: "half", label: "Watch" },
   off_track: { glyph: "hollow", label: "Off track" },
   missed: { glyph: "hollow", label: "Missed" },
   over_budget: { glyph: "hollow", label: "Over budget" },

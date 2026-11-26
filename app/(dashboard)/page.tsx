@@ -67,6 +67,20 @@ async function Overview({ searchParams }: { searchParams: PageProps<"/">["search
         })}
       </div>
 
+      {/* 2b · What moved this week, and who drove it */}
+      <Section title="This week" description="Last 7 days vs the 7 before. Shows what moved together, not proof of cause.">
+        <ul className="grid gap-3 md:grid-cols-2">
+          {v.drivers.map((d) => (
+            <li key={d.metric} className="flex items-start gap-3 rounded-xl bg-bg p-3">
+              <span className="mt-0.5 font-mono text-[14px] text-fg" aria-hidden>
+                {d.change === null || Math.abs(d.change) < 0.0001 ? "■" : d.change > 0 ? "▲" : "▼"}
+              </span>
+              <span className="text-[14px] leading-relaxed text-fg-2">{d.sentence}</span>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
       {/* 3 · Decide and diagnose */}
       <div className="grid gap-4 xl:grid-cols-2">
         <Section title="What to do next" description="Ranked by impact on the visitor goal. Each one can become a task.">

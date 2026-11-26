@@ -2,6 +2,7 @@ import { ObjectId, type Db, type Document } from "mongodb";
 import { APP_COLLECTIONS, RESETTABLE, SOURCE_COLLECTIONS, baselineName } from "../data/collections";
 import type { SettingsDoc, TaskDoc } from "../models/app";
 import type { ParsedDataset } from "./workbook";
+import { defaultGoalModel, seedBets, seedDecisions } from "./strategy";
 
 /**
  * Writes a parsed dataset to MongoDB as both the live collections and their
@@ -20,6 +21,8 @@ const INDEXES: Record<string, Document[]> = {
   checkins: [{ event_id: 1 }, { person_id: 1 }, { occurred_at: 1 }],
   targets: [{ effective_at: 1 }],
   tasks: [{ task_id: 1 }, { status: 1, due_date: 1 }, { campaign_id: 1 }],
+  bets: [{ bet_id: 1 }, { rank: 1 }],
+  decisions: [{ decision_id: 1 }, { as_of: 1 }],
   activity: [{ at: -1 }, { entity: 1, entity_id: 1 }],
 };
 
@@ -120,7 +123,7 @@ export function seedTasks(): TaskDoc[] {
 }
 
 /** Invalidates every instance's in-memory dataset (see lib/analytics/load.ts). */
-async function bumpVersion(db: Db) {
+export async function bumpVersion(db: Db) {
   await db.collection(APP_COLLECTIONS.meta).updateOne(
     { _id: "data_version" as never },
     { $inc: { v: 1 }, $set: { at: new Date() } },
@@ -128,7 +131,7 @@ async function bumpVersion(db: Db) {
   );
 }
 
-async function insertChunked(db: Db, name: string, docs: Document[]) {
+export async function insertChunked(db: Db, name: string, docs: Document[]) {
   for (let i = 0; i < docs.length; i += CHUNK) {
     await db.collection(name).insertMany(docs.slice(i, i + CHUNK), { ordered: false });
   }
@@ -154,6 +157,9 @@ export async function writeDataset(db: Db, data: ParsedDataset, meta: { sha256: 
   const appSeed: Record<string, Document[]> = {
     [APP_COLLECTIONS.settings]: [DEFAULT_SETTINGS],
     [APP_COLLECTIONS.tasks]: seedTasks(),
+    [APP_COLLECTIONS.goal_model]: [defaultGoalModel()],
+    [APP_COLLECTIONS.bets]: seedBets(),
+    [APP_COLLECTIONS.decisions]: seedDecisions(),
   };
 
   const all: Record<string, Document[]> = { ...appSeed };

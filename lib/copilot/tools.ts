@@ -20,11 +20,17 @@ import {
   targetVsActual,
   trend,
   TREND_METRICS,
+  decisionOutcome,
+  evaluateBets,
+  goalModel,
+  ownerWorkload,
+  weeklyDrivers,
   type Dataset,
   type Snapshot,
 } from "../analytics";
 import { getDb } from "../db";
 import { CampaignPatch, TaskCreate } from "../models/inputs";
+import { DecisionInput } from "../models/strategy";
 import { ScenarioChanges } from "../models/scenario";
 import { addDays, isDayKey } from "../time";
 import type { TraceRecorder } from "./trace";
@@ -473,6 +479,143 @@ export function buildTools(ctx: ToolContext) {
         rec.add({ id: `${id}:calc`, kind: "engine", label: "mathjs.evaluate", sub: `${expression} = ${r4(num)}`, status: "ok", detail: { expression, variables, value: num } });
         rec.link(id, `${id}:calc`, "computed_by");
         return { expression, variables: variables ?? {}, value: r4(num) };
+      }),
+    }),
+
+    get_goal_model: tool({
+      description: "The bottom-up plan ('how high can we aim'): audience segments with population, reach, identify and register rates; base and stretch visitors (capacity-capped); and plan vs data for each step.",
+      inputSchema: z.object({ as_of: asOfArg }),
+      execute: traced("get_goal_model", ({ as_of }: { as_of?: string }, id) => {
+        if (!ctx.ds.goalModel) return { error: "No goal model in the data" };
+        const s = snap(as_of);
+        const g = goalModel(ctx.ds.goalModel, s);
+        rec.engine(id, "goalModel", g);
+        return {
+          as_of: s.asOf,
+          base: { registrations: r1(g.value.base.registrations), visitors: r1(g.value.base.visitors), capped: g.value.base.capped },
+          stretch: { registrations: r1(g.value.stretch.registrations), visitors: r1(g.value.stretch.visitors), capped: g.value.stretch.capped },
+          venue_capacity: s.capacity,
+          segments: g.value.segments.map((x) => ({ segment: x.name, population: x.population, registrations: r1(x.registrations), share: r4(x.share) })),
+          plan_vs_data: g.value.plan_vs_data.map((x) => ({ step: x.label, plan: r4(x.plan), data: r4(x.data), basis: x.data_label })),
+          note: "Segment populations and rates are planning assumptions unless labelled Sourced.",
+        };
+      }),
+    }),
+
+    list_bets: tool({
+      description: "The ranked strategic bets (RICE), each with live early-signal states (scale / watch / stop / too early), verdict, spend vs budget, and visitors vs plan.",
+      inputSchema: z.object({ as_of: asOfArg }),
+      execute: traced("list_bets", ({ as_of }: { as_of?: string }, id) => {
+        const s = snap(as_of);
+        const r = evaluateBets(ctx.ds.bets ?? [], s);
+        rec.engine(id, "evaluateBets", r);
+        return {
+          as_of: s.asOf,
+          bets: r.value.map((b) => ({
+            id: b.bet_id,
+            rank: b.rank,
+            title: b.title,
+            status: b.status,
+            owner: b.owner_name,
+            verdict: b.verdict,
+            reason: b.verdict_reason,
+            rice: Math.round(b.rice_score),
+            spend: b.spend_to_date,
+            budget: b.budget_inr,
+            visitors: r1(b.visitors_actual_or_projected),
+            visitors_basis: b.visitors_basis,
+            planned_visitors: b.expected_visitors,
+            signals: b.signals.map((x) => ({ signal: x.label, value: r4(x.value), state: x.state })),
+          })),
+        };
+      }),
+    }),
+
+    get_bet: tool({
+      description: "One bet in depth (by id like B2 or by title words): hypothesis, signals with thresholds, contribution, linked campaigns, and decisions with their measured outcomes.",
+      inputSchema: z.object({ bet: z.string(), as_of: asOfArg }),
+      execute: traced("get_bet", ({ bet, as_of }: { bet: string; as_of?: string }, id) => {
+        const q = bet.trim().toLowerCase();
+        const all = ctx.ds.bets ?? [];
+        const hits = all.filter((b) => b.bet_id.toLowerCase() === q || b.title.toLowerCase().includes(q) || q.split(/\s+/).filter((t) => t.length > 3).some((t) => b.title.toLowerCase().includes(t)));
+        if (hits.length !== 1) return { ambiguous: hits.length > 1, instruction: hits.length > 1 ? "Several bets match. List them and ask which one." : "No bet matches.", candidates: (hits.length ? hits : all).map((b) => ({ id: b.bet_id, title: b.title })) };
+        const b = hits[0]!;
+        const s = snap(as_of);
+        const r = evaluateBets([b], s);
+        rec.engine(id, "evaluateBet", r);
+        const e = r.value[0]!;
+        return {
+          as_of: s.asOf,
+          id: b.bet_id,
+          title: b.title,
+          hypothesis: b.hypothesis,
+          status: b.status,
+          owner: b.owner_name,
+          campaigns: b.campaign_ids,
+          verdict: e.verdict,
+          reason: e.verdict_reason,
+          signals: e.signals.map((x) => ({ signal: x.label, value: r4(x.value), scale_if: x.scale_if, stop_if: x.stop_if, direction: x.direction, state: x.state, sample: x.sample })),
+          spend: e.spend_to_date,
+          budget: b.budget_inr,
+          visitors: r1(e.visitors_actual_or_projected),
+          visitors_basis: e.visitors_basis,
+          planned_visitors: b.expected_visitors,
+          decisions: (ctx.ds.decisions ?? []).filter((d) => d.bet_id === b.bet_id).map((d) => ({ id: d.decision_id, decision: d.decision, title: d.title, as_of: d.as_of, outcome: decisionOutcome(d, s, ctx.ds) })),
+        };
+      }),
+    }),
+
+    get_weekly_drivers: tool({
+      description: "What moved in the last 7 days vs the 7 before (registrations, new identified people, spend, cost per registration) and which campaigns drove each change. Association, not causation.",
+      inputSchema: z.object({ as_of: asOfArg }),
+      execute: traced("get_weekly_drivers", ({ as_of }: { as_of?: string }, id) => {
+        const s = snap(as_of);
+        const d = weeklyDrivers(s);
+        rec.add({ id: `${id}:eng`, kind: "engine", label: "weeklyDrivers", sub: "trend(7d) per metric + top campaign contributions", status: "ok" });
+        rec.link(id, `${id}:eng`, "computed_by");
+        return { as_of: s.asOf, drivers: d.map((x) => ({ metric: x.label, current: r4(x.current), previous: r4(x.previous), change: r4(x.change), change_pct: r4(x.change_pct), up: x.up, down: x.down, summary: x.sentence })) };
+      }),
+    }),
+
+    list_decisions: tool({
+      description: "Logged scale/change/stop decisions with evidence at the time and the measured outcome (14 days after vs 14 before).",
+      inputSchema: z.object({ as_of: asOfArg }),
+      execute: traced("list_decisions", ({ as_of }: { as_of?: string }, id) => {
+        const s = snap(as_of);
+        const rows = ctx.ds.decisions ?? [];
+        rec.source(id, { collection: "decisions", records: rows.length, filter: "all" });
+        return { as_of: s.asOf, decisions: rows.map((d) => ({ id: d.decision_id, decision: d.decision, title: d.title, bet: d.bet_id, campaign: d.campaign_id, as_of: d.as_of, rationale: d.rationale, outcome: decisionOutcome(d, s, ctx.ds) })) };
+      }),
+    }),
+
+    get_team: tool({
+      description: "Owner workload: each owner's campaigns (with rule verdicts), bets, open and overdue tasks, and next due task.",
+      inputSchema: z.object({ as_of: asOfArg }),
+      execute: traced("get_team", ({ as_of }: { as_of?: string }, id) => {
+        const s = snap(as_of);
+        rec.source(id, { collection: "tasks", records: ctx.ds.tasks?.length ?? 0, filter: "by owner" });
+        return { as_of: s.asOf, owners: ownerWorkload(ctx.ds, s) };
+      }),
+    }),
+
+    propose_decision: tool({
+      description: "Propose logging a scale/keep/change/stop/pause/launch decision on a bet or campaign. Does NOT save until the user confirms. Evidence is frozen on save.",
+      inputSchema: z.object({
+        decision: z.enum(["scale", "keep", "change", "stop", "pause", "launch"]),
+        title: z.string().min(3).max(140),
+        rationale: z.string().max(800),
+        bet: z.string().optional().describe("Bet id like B2"),
+        campaign: z.string().optional(),
+        outcome_metric: z.enum(["cost_per_registration", "registrations_per_day", "ctr", "session_to_start"]).default("cost_per_registration"),
+      }),
+      execute: traced("propose_decision", (a: { decision: "scale" | "keep" | "change" | "stop" | "pause" | "launch"; title: string; rationale: string; bet?: string; campaign?: string; outcome_metric: "cost_per_registration" | "registrations_per_day" | "ctr" | "session_to_start" }, id) => {
+        const bet = a.bet ? (ctx.ds.bets ?? []).find((b) => b.bet_id.toLowerCase() === a.bet!.toLowerCase()) : undefined;
+        const cid = a.campaign ? resolveCampaign(ctx.ds, a.campaign).match?.campaign_id ?? null : null;
+        const draft = { decision: a.decision, title: a.title, rationale: a.rationale, bet_id: bet?.bet_id ?? null, campaign_id: cid, outcome_metric: a.outcome_metric, as_of: ctx.asOf, evidence: {} };
+        const v = DecisionInput.safeParse(draft);
+        const pid = rec.add({ id: `prop:${id}`, kind: "proposal", label: `Decision: ${a.decision.toUpperCase()} ${a.title}`, sub: "awaiting confirmation", status: "pending", detail: draft });
+        rec.link(id, pid, "proposes");
+        return { proposal_id: pid, kind: "decision", status: "awaiting_user_confirmation", draft, valid: v.success, issues: v.success ? [] : v.error.issues.map((i) => `${i.path.join(".")} ${i.message}`) };
       }),
     }),
 

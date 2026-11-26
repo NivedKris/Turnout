@@ -22,6 +22,11 @@ import {
   type Snapshot,
   type SourceRef,
   BENCHMARKS,
+  decisionOutcome,
+  evaluateBets,
+  goalModel,
+  ownerWorkload,
+  weeklyDrivers,
 } from "@/lib/analytics";
 import { loadDataset, servedVersion } from "@/lib/analytics/load";
 import { getDb } from "@/lib/db";
@@ -367,12 +372,27 @@ async function overviewViewRaw(asOfInput?: string) {
     });
   }
 
+  // Early-signal alerts from bets (stop signals first).
+  for (const be of evaluateBets(ds.bets ?? [], s).value.filter((x) => x.verdict === "stop" && x.status !== "killed" && x.status !== "paused")) {
+    const bad = be.signals.filter((x) => x.state === "stop");
+    actions.push({
+      id: `bet-${be.bet_id}`,
+      title: `Rethink bet: ${be.title}`,
+      why: `${bad.map((x) => x.label).join(", ")} past the stop line. ${be.verdict_reason}`,
+      owner: be.owner_name,
+      campaignId: be.campaign_ids[0],
+      href: `/bets/${be.bet_id}`,
+    });
+  }
+  const drivers = weeklyDrivers(s);
+
   const sparkFrom = addDays(s.asOf, -20);
   const campaignTrends = Object.fromEntries(s.campaigns.map((c) => [c.campaign_id, series(s, "registrations", { campaignId: c.campaign_id, from: sparkFrom }).map((p) => p.value)]));
 
   return {
     meta: metaOf(s, ds),
-    actions: actions.slice(0, 4),
+    actions: actions.slice(0, 5),
+    drivers,
     campaignTrends,
     tiles: tiles(ds, s),
     goals: goals.value,
@@ -700,6 +720,84 @@ async function plannerViewRaw(asOfInput?: string) {
 }
 export type PlannerView = Awaited<ReturnType<typeof plannerView>>;
 
+/* ───────────────────────── Strategy views ───────────────────────── */
+
+async function planViewRaw(asOfInput?: string) {
+  const ds = await loadDataset();
+  const s = buildSnapshot(ds, asOfInput);
+  if (!ds.goalModel) return { meta: metaOf(s, ds), model: null, result: null };
+  const r = goalModel(ds.goalModel, s);
+  return { meta: metaOf(s, ds), model: { ...ds.goalModel, updated_at: ds.goalModel.updated_at instanceof Date ? ds.goalModel.updated_at.toISOString() : String(ds.goalModel.updated_at) }, result: r.value, assumptions: r.assumptions, formula: r.formula };
+}
+export type PlanView = Awaited<ReturnType<typeof planViewRaw>>;
+
+async function betsViewRaw(asOfInput?: string) {
+  const ds = await loadDataset();
+  const s = buildSnapshot(ds, asOfInput);
+  const ev = evaluateBets(ds.bets ?? [], s).value;
+  const bets = (ds.bets ?? []).map((b) => ({ ...b, created_at: String(b.created_at), updated_at: String(b.updated_at) }));
+  const totalBudget = bets.reduce((a, b) => a + b.budget_inr, 0);
+  const expected = bets.filter((b) => b.status !== "killed").reduce((a, b) => a + b.expected_visitors, 0);
+  return {
+    meta: metaOf(s, ds),
+    evaluations: ev,
+    bets,
+    totals: { budget: totalBudget, expected_visitors: expected, budget_approved: s.target?.marketing_budget_inr ?? null },
+    campaigns: ds.campaigns.map((c) => ({ id: c.campaign_id, name: c.campaign_name, owner: c.owner_name })),
+    owners: [...new Set([...ds.campaigns.map((c) => c.owner_name), ...(ds.tasks ?? []).map((t) => t.owner_name)])].sort(),
+  };
+}
+export type BetsView = Awaited<ReturnType<typeof betsViewRaw>>;
+
+async function betViewRaw(id: string, asOfInput?: string) {
+  const ds = await loadDataset();
+  const s = buildSnapshot(ds, asOfInput);
+  const bet = (ds.bets ?? []).find((b) => b.bet_id === id);
+  if (!bet) return null;
+  const ev = evaluateBets([bet], s).value[0]!;
+  const decisions = (ds.decisions ?? []).filter((d) => d.bet_id === id).map((d) => ({ ...d, decided_at: String(d.decided_at), outcome: decisionOutcome(d, s, ds) }));
+  const regSeries = bet.campaign_ids.length
+    ? (() => {
+        const per = bet.campaign_ids.map((cid) => series(s, "registrations", { campaignId: cid }));
+        return per[0]!.map((p, i) => ({ day: p.day, value: per.reduce((a, arr) => a + (arr[i]?.value ?? 0), 0) }));
+      })()
+    : [];
+  return {
+    meta: metaOf(s, ds),
+    bet: { ...bet, created_at: String(bet.created_at), updated_at: String(bet.updated_at) },
+    evaluation: ev,
+    decisions,
+    regSeries,
+    campaigns: ds.campaigns.map((c) => ({ id: c.campaign_id, name: c.campaign_name, owner: c.owner_name })),
+    owners: [...new Set([...ds.campaigns.map((c) => c.owner_name), ...(ds.tasks ?? []).map((t) => t.owner_name)])].sort(),
+  };
+}
+export type BetView = NonNullable<Awaited<ReturnType<typeof betViewRaw>>>;
+
+async function decisionsViewRaw(asOfInput?: string) {
+  const ds = await loadDataset();
+  const s = buildSnapshot(ds, asOfInput);
+  const bets = new Map((ds.bets ?? []).map((b) => [b.bet_id, b.title]));
+  const camps = new Map(ds.campaigns.map((c) => [c.campaign_id, c.campaign_name]));
+  const rows = [...(ds.decisions ?? [])]
+    .sort((a, b) => (a.as_of < b.as_of ? 1 : -1))
+    .map((d) => ({ ...d, decided_at: String(d.decided_at), bet_title: d.bet_id ? bets.get(d.bet_id) ?? null : null, campaign_name: d.campaign_id ? camps.get(d.campaign_id) ?? null : null, outcome: decisionOutcome(d, s, ds) }));
+  return {
+    meta: metaOf(s, ds),
+    rows,
+    bets: (ds.bets ?? []).map((b) => ({ id: b.bet_id, title: b.title, campaign_ids: b.campaign_ids })),
+    campaigns: ds.campaigns.map((c) => ({ id: c.campaign_id, name: c.campaign_name })),
+  };
+}
+export type DecisionsView = Awaited<ReturnType<typeof decisionsViewRaw>>;
+
+async function ownersViewRaw(asOfInput?: string) {
+  const ds = await loadDataset();
+  const s = buildSnapshot(ds, asOfInput);
+  return { meta: metaOf(s, ds), owners: ownerWorkload(ds, s) };
+}
+export type OwnersView = Awaited<ReturnType<typeof ownersViewRaw>>;
+
 /* Cached exports */
 export const overviewView = cachedView("overviewView", overviewViewRaw);
 export const kpiView = cachedView("kpiView", kpiViewRaw);
@@ -708,3 +806,8 @@ export const campaignView = cachedView("campaignView", campaignViewRaw);
 export const tasksView = cachedView("tasksView", tasksViewRaw);
 export const settingsView = cachedView("settingsView", settingsViewRaw);
 export const plannerView = cachedView("plannerView", plannerViewRaw);
+export const planView = cachedView("planView", planViewRaw);
+export const betsView = cachedView("betsView", betsViewRaw);
+export const betView = cachedView("betView", betViewRaw);
+export const decisionsView = cachedView("decisionsView", decisionsViewRaw);
+export const ownersView = cachedView("ownersView", ownersViewRaw);

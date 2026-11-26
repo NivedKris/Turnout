@@ -20,9 +20,21 @@ export type ToolName =
   | "get_data_coverage"
   | "calculate"
   | "propose_task"
-  | "propose_campaign_update";
+  | "propose_campaign_update"
+  | "get_goal_model"
+  | "list_bets"
+  | "get_bet"
+  | "get_weekly_drivers"
+  | "list_decisions"
+  | "get_team"
+  | "propose_decision";
 
 const ROUTES: { re: RegExp; tools: ToolName[] }[] = [
+  { re: /\bbets?\b|strateg|initiative|experiment|idea|double down|deprioriti|rice|hypothes|signal|leading indicator|early warning/i, tools: ["list_bets", "get_bet"] },
+  { re: /plan\b|goal model|how high|aim|audience|segment|potential|bottom.?up|capacity|base case|stretch case/i, tools: ["get_goal_model"] },
+  { re: /decision|decided|did .* work|outcome|result of|after we/i, tools: ["list_decisions", "propose_decision"] },
+  { re: /what (changed|moved)|driv|this week|last week|week over week|why did/i, tools: ["get_weekly_drivers"] },
+  { re: /owner|team|workload|who (owns|is responsible)|busy|overloaded/i, tools: ["get_team"] },
   { re: /on track|track|target|goal|projection|project|forecast|expect|stretch|base case|reach the|hit the|how many .*(attend|visit)|status/i, tools: ["get_overview"] },
   { re: /\bwhy\b|bottleneck|funnel|conversion|convert|drop|leak|stage|show.?up|no.?show|confirm/i, tools: ["get_bottleneck", "get_funnel"] },
   { re: /cut|stop|scale|kill|pause|should we|what should|recommend|priori|focus|double down|invest|budget|realloc|move .*(budget|money|₹)|spend more|best|worst|winner|loser|underperform|outperform/i, tools: ["get_rule_evaluations", "suggest_reallocation"] },
@@ -39,7 +51,7 @@ const ROUTES: { re: RegExp; tools: ToolName[] }[] = [
 
 const ALWAYS: ToolName[] = ["calculate", "get_data_coverage", "propose_task"];
 const DEFAULT: ToolName[] = ["get_overview", "list_campaigns", "get_campaign"];
-const MAX = 9;
+const MAX = 10;
 
 export function routeTools(userTexts: string[]): ToolName[] {
   const recent = userTexts.slice(-2);

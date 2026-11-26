@@ -22,12 +22,22 @@ export const APP_COLLECTIONS = {
   activity: "activity",
   chat_sessions: "chat_sessions",
   meta: "meta",
+  goal_model: "goal_model",
+  bets: "bets",
+  decisions: "decisions",
 } as const;
 
 export type SourceCollection = keyof typeof SOURCE_COLLECTIONS;
 
 /** Collections restored by reset (source data + seeded app state). */
-export const RESETTABLE = [...Object.values(SOURCE_COLLECTIONS), APP_COLLECTIONS.settings, APP_COLLECTIONS.tasks] as const;
+export const RESETTABLE = [
+  ...Object.values(SOURCE_COLLECTIONS),
+  APP_COLLECTIONS.settings,
+  APP_COLLECTIONS.tasks,
+  APP_COLLECTIONS.goal_model,
+  APP_COLLECTIONS.bets,
+  APP_COLLECTIONS.decisions,
+] as const;
 
 export const baselineName = (name: string) => `baseline_${name}`;
 
@@ -41,4 +51,6 @@ export const SOURCE_KEY: Partial<Record<string, string>> = {
   registration_history: "history_id",
   checkins: "event_id",
   tasks: "task_id",
+  bets: "bet_id",
+  decisions: "decision_id",
 };

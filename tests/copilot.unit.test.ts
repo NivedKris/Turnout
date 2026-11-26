@@ -26,6 +26,12 @@ describe("claim grounding", () => {
 });
 
 describe("tool router", () => {
+  it("routes strategy questions to the strategy tools", () => {
+    expect(routeTools(["Is the ambassador bet working?"])).toEqual(expect.arrayContaining(["list_bets", "get_bet"]));
+    expect(routeTools(["How high can we aim?"])).toContain("get_goal_model");
+    expect(routeTools(["What changed this week?"])).toContain("get_weekly_drivers");
+    expect(routeTools(["Did the decision to cut paid social work?"])).toContain("list_decisions");
+  });
   it("routes by intent and always includes calculate + coverage", () => {
     expect(routeTools(["Are we on track?"])).toEqual(expect.arrayContaining(["get_overview", "calculate", "get_data_coverage"]));
     expect(routeTools(["Which campaign should we cut?"])).toEqual(expect.arrayContaining(["get_rule_evaluations", "suggest_reallocation"]));
@@ -33,9 +39,9 @@ describe("tool router", () => {
   it("carries intent into short follow-ups", () => {
     expect(routeTools(["Where's our biggest bottleneck?", "and for Paid Social?"])).toEqual(expect.arrayContaining(["get_bottleneck", "get_campaign"]));
   });
-  it("never offers more than 9 tools and always offers propose_task", () => {
+  it("never offers more than 10 tools and always offers propose_task", () => {
     const r = routeTools(["why should we cut paid social campaign budget what if trend task create compare"]);
-    expect(r.length).toBeLessThanOrEqual(9);
+    expect(r.length).toBeLessThanOrEqual(10);
     expect(routeTools(["Which campaign should we cut?"])).toContain("propose_task");
   });
 });
