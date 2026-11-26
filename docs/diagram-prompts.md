@@ -7,7 +7,7 @@ Five diagrams for the README and the paper. Generate each image, then save it un
 
 ---
 
-## 1. `architecture.png`: system architecture
+## 1. `architecture.jpg`: system architecture
 
 > Three horizontal layers, top to bottom, connected by labelled arrows.
 > **Top layer, "Browser":** five boxes side by side: "Dashboard pages (Overview, Funnel, Campaigns, KPI terminals)", "Strategy (Goal plan, Bets, Decisions)", "Manage (Tasks, Team, Activity)", "Copilot terminal + trace graph", "Voice assistant (Gemini Live)".
@@ -17,14 +17,14 @@ Five diagrams for the README and the paper. Generate each image, then save it un
 > Arrow labels between layers: Browser→Next.js "Server Components (reads) · Server Actions (writes) · /api/chat (stream)"; Next.js→MongoDB "read dataset when version changes · write + bump version".
 > Accent colour on the path Browser → Copilot → Analytics engine → MongoDB.
 
-## 2. `data-flow.png`: how a data change reaches every answer
+## 2. `data-flow.jpg`: how a data change reaches every answer
 
 > A loop of six steps drawn as a circle of rounded boxes with arrows, clockwise:
 > 1 "User edits data (log a spend row, change a campaign, create a task)" → 2 "Mutation: validate (Zod) → write to MongoDB → activity log" → 3 "Bump meta.data_version" → 4 "Next request sees a new version → reload dataset (memory → disk pack → Mongo)" → 5 "Analytics engine recomputes as of the selected date" → 6 "Dashboard, KPI terminals and copilot all show the new numbers" → back to 1.
 > In the centre: a small box "One engine, one dataset version: the chatbot can never disagree with the screen".
 > Accent colour on steps 3 and 4.
 
-## 3. `copilot-loop.png`: how the copilot answers
+## 3. `copilot-loop.jpg`: how the copilot answers
 
 > Left to right, five columns with headings in dot-matrix font: "MODEL", "TOOLS", "ENGINE", "DATA & RULES", "ANSWER".
 > Before the first column, a box "Question + as-of date" with an arrow into a diamond "Tool router (picks ≤ 10 relevant tools)".
@@ -36,7 +36,7 @@ Five diagrams for the README and the paper. Generate each image, then save it un
 > A separate branch from "propose_task" to a box "Proposal card: nothing saved until the person clicks Confirm".
 > Thin grey curved connectors between columns; accent colour on one complete path: Question → gpt-oss-120b → get_rule_evaluations → evaluateRules → rule → Answer.
 
-## 4. `strategy-loop.png`: measure, diagnose, decide, manage
+## 4. `strategy-loop.jpg`: measure, diagnose, decide, manage
 
 > Four large rounded boxes in a clockwise loop:
 > "MEASURE: funnel, KPIs vs goal, projection to event day" → "DIAGNOSE: bottleneck stage, weekly drivers, campaign rules" → "DECIDE: scale / keep / change / stop, budget reallocation, what-if planner" → "MANAGE: tasks with owners, decision log, outcome 14 days later" → back to MEASURE.
@@ -44,7 +44,7 @@ Five diagrams for the README and the paper. Generate each image, then save it un
 > Outside the loop on the right: a box "AI copilot + voice: asks, explains, proposes; a person confirms" with dotted lines to all four boxes.
 > Accent colour on the arrow DECIDE → MANAGE.
 
-## 5. `funnel-math.png`: base vs stretch plan
+## 5. `funnel-math.jpg`: base vs stretch plan
 
 > Two vertical funnels side by side, titled "BASE" and "STRETCH".
 > BASE stages (top to bottom): "Students in 5 segments 8,30,000" → "Reached 41,000" → "Identified 3,928" → "Registered 3,108" → "Confirmed 2,766 (× 89%)" → "Attend 1,992 (× 72% show-up)" → "+ walk-ins 105" → "Visitors 2,097".

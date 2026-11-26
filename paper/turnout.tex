@@ -298,7 +298,7 @@ Friends of registrants & 20,000 & 25\% & 5,000 & 8\% & 400 & 80\% & 320.0 \\
 
 So the revised goal of 2,200 sits between base (2,097) and stretch (2,500): reachable, but only with better reach or conversion than the base case. The app compares each plan step with the data (plan vs data): on 31 March identified is 3,320 against 3,928 planned, and identified$\to$registered is 70.4\% against the plan's 79.1\%.
 
-\diagram{funnel-math.png}{Base and stretch goal plans, from audience to visitors, with the capacity cap.}{fig:funnelmath}
+\diagram{funnel-math.jpg}{Base and stretch goal plans, from audience to visitors, with the capacity cap.}{fig:funnelmath}
 
 \subsection{Projection from the data (what the dashboard shows)}
 \[
@@ -396,6 +396,7 @@ Worked example: bet 1 $= 40{,}000 \times 2 \times 0.8 \div 6 = 10{,}667$. Peer c
 % ===========================================================================
 \section{Product and architecture}\label{sec:arch}
 % ===========================================================================
+\diagram{strategy-loop.jpg}{The operating loop the app is built around. The as-of date drives every step; the copilot can help at each one, and a person confirms every change.}{fig:loop}
 \begin{tabularx}{\linewidth}{@{}p{2.2cm}p{4.2cm}L@{}}
 \toprule
 \textbf{Module} & \textbf{Screens} & \textbf{What it does} \\
@@ -408,18 +409,18 @@ Worked example: bet 1 $= 40{,}000 \times 2 \times 0.8 \div 6 = 10{,}667$. Peer c
 \bottomrule
 \end{tabularx}
 
-\diagram{architecture.png}{System architecture. Pages, the REST API and the copilot all call the same pure analytics engine, so the chatbot cannot disagree with the screen.}{fig:arch}
+\diagram{architecture.jpg}{System architecture. Pages, the REST API and the copilot all call the same pure analytics engine, so the chatbot cannot disagree with the screen.}{fig:arch}
 
 \paragraph{Collections (MongoDB Atlas).} Source tables mirrored one-to-one with source IDs as unique keys: \code{campaigns}, \code{campaign\_daily}, \code{people}, \code{interactions}, \code{registrations}, \code{registration\_history}, \code{checkins}, \code{targets}, \code{event}, each with a \code{baseline\_*} twin used by reset. App data: \code{tasks}, \code{bets}, \code{decisions}, \code{goal\_model}, \code{settings}, \code{activity}, \code{chat\_sessions}, and \code{meta} (holding \code{data\_version}).
 
 \paragraph{How a change reaches the analytics.} All writes go through one path: validate with Zod, write, append to the activity log, then increment \code{meta.data\_version}. Each request reads only that counter; when it has changed, the dataset is reloaded (memory $\to$ compressed disk pack $\to$ MongoDB) and every view, KPI and copilot tool recomputes from it. On the free M0 cluster this cut a cold start from about 2.5 minutes to about 1.5 seconds, with warm pages in 0.06--0.8 seconds.
 
-\diagram{data-flow.png}{From an edit to every answer: one write path, one version counter, one engine.}{fig:dataflow}
+\diagram{data-flow.jpg}{From an edit to every answer: one write path, one version counter, one engine.}{fig:dataflow}
 
 % ===========================================================================
 \section{AI chatbot design}\label{sec:copilot}
 % ===========================================================================
-\diagram{copilot-loop.png}{How the copilot answers: tool router, provider chain, tools, engine, data and rules, and the claim check.}{fig:copilotloop}
+\diagram{copilot-loop.jpg}{How the copilot answers: tool router, provider chain, tools, engine, data and rules, and the claim check.}{fig:copilotloop}
 
 \paragraph{Grounded in the data.} The model receives a short header (as-of date, phase, target, campaign list) and 24 tools that call the engine: overview, funnel, bottleneck, trends, daily series, campaigns (with fuzzy name matching), comparisons, rule evaluations, reallocation, scenarios, tasks, activity, data coverage, goal plan, bets, weekly drivers, decisions and team. A \code{calculate} tool (a sandboxed mathjs) does all arithmetic; the model is told never to compute in its head. After the answer, every number in it is matched against the numbers returned by tools in this turn or earlier turns; unmatched numbers are flagged \textbf{UNSUPPORTED} in the trace, and the verdict panel reads GROUNDED or CHECK.
 

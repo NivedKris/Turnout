@@ -108,6 +108,8 @@ visitors     = min( capacity, Σ registered_s × confirm × show_up ÷ (1 − wa
 | **Base** | 3,928 | 3,108 | 2,766 | 1,992 (× 72%) | 105 | **2,097** |
 | **Stretch** (reach × 1.25, register × 1.08) | 4,910 | 4,196 | 3,735 | 2,838 (× 76%) | 149 | 2,988 → **2,500** (capacity) |
 
+![Base and stretch goal plans](paper/figures/funnel-math.jpg)
+
 The 2,200 goal sits between base and stretch: reachable, but not on base-case conversion.
 
 **Projection from the data, 31 Mar:** 2,337 + 50.0/day × 11 days = **2,887 registrations** → × 83.95% confirmed × 72% show-up ÷ 0.95 = **1,837 visitors**. Stretch: 3,077 / 2,067.
@@ -138,6 +140,8 @@ Once campaigns run, evidence replaces estimates: the CPR rules. The two framewor
 
 ## 6. Product and architecture
 
+![Measure, diagnose, decide, manage](paper/figures/strategy-loop.jpg)
+
 | Module | Screens | What it does |
 |---|---|---|
 | **Measure** | Overview, 8 KPI terminals, Funnel, Campaigns | Goal vs actual vs projection; two-layer funnel; an **as-of** time machine (any day, 15 Jan – 20 Apr 2025) |
@@ -146,22 +150,15 @@ Once campaigns run, evidence replaces estimates: the CPR rules. The two framewor
 | **Manage** | Tasks, Decisions, Team, Activity, Targets | Owners and due dates; decision outcomes 14 days later; workload; change log; reset |
 | **Ask** | Copilot terminal, chat (⌘I), voice (⌘J) | Grounded answers with traces; proposals that wait for a yes; navigation by voice |
 
-```
-Browser ─ pages · copilot terminal · voice
-   │  Server Components (reads) · Server Actions (writes) · /api/chat (stream) · /api/assistant/*
-   ▼
-Next.js 16 on Vercel
-   ├─ lib/server/views.ts       read models, built only from engine results
-   ├─ lib/server/mutations.ts   the one write path: Zod → write → activity log → bump data_version
-   ├─ lib/analytics/*           PURE engine: snapshot, funnel, projection, bottleneck, rules, reallocation, strategy
-   └─ lib/copilot/*             tools → engine · provider chain · trace recorder · claim grounding
-   ▼
-MongoDB Atlas M0 ─ source tables (+ baseline_* for reset) · tasks · bets · decisions · goal_model · activity · settings · meta
-```
+![Architecture](paper/figures/architecture.jpg)
 
 **How a change reaches the analytics:** every write bumps `meta.data_version`. Each request reads only that counter and reloads the dataset when it has changed, so pages, the API and the copilot all recompute from the same data. Cold start is ~1.5 s on M0; warm pages take 0.06–0.8 s.
 
+![From an edit to every answer](paper/figures/data-flow.jpg)
+
 ## 7. AI chatbot design
+
+![How the copilot answers](paper/figures/copilot-loop.jpg)
 
 - **Grounded:** 24 tools call the same engine as the screens. A sandboxed `calculate` tool does all arithmetic. Every number in an answer is matched against tool output; unmatched numbers are flagged **UNSUPPORTED**, and the verdict panel says GROUNDED or CHECK.
 - **Confirm before writing:** the `propose_*` tools only return drafts. **Confirm** uses the screens' write path with `actor: "copilot"`. The voice assistant asks "Shall I…?" and acts only on a clear yes.
