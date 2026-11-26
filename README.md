@@ -9,7 +9,7 @@ RISA Growth APM assignment, Part 2 · **Challenge A: Attendee Growth** · city: 
 | **Live app** | _[Vercel URL: add after deploy]_ |
 | **Passcode** | _[shared in the submission form]_ |
 | **Demo video** | _[link]_ |
-| **3-slide deck** | _[link to PDF]_ |
+| **3-slide deck** | [Turnout-slides.pdf](Turnout-slides.pdf) (LaTeX source in `slides/`) |
 | **Full write-up (26 pages, with references)** | [README.pdf](README.pdf) |
 
 **Why Bengaluru.** Bengaluru Urban has **1,148 colleges, the most of any district in India** (Pune 517, Hyderabad 465; AISHE 2023-24). The dataset's channels (ambassadors, college partnerships, clubs, referrals) work best where many campuses sit close together, and the college count gives the goal plan a sourced starting population instead of a guess.
