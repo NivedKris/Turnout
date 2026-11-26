@@ -169,7 +169,7 @@ Once campaigns run, evidence replaces estimates: the CPR rules. The two framewor
 - **Voice (Gemini Live):** the same tools, plus screen tools (navigate, read the screen, show details). The browser gets a single-use token, so the key stays on the server.
 - **Limits:**
   - Free-tier rate limits cause fallbacks.
-  - Data answers take ~5–13 s.
+  - Multi-step chat answers take ~5–13 s (voice: 1–3 s).
   - Grounding checks numbers, not reasoning.
   - A provider failure mid-stream isn't retried.
 
