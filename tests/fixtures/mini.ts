@@ -172,6 +172,8 @@ export function miniDataset(): Dataset {
     status: "active" as const,
     budget_planned_inr: null,
     hypothesis: "",
+    thresholds: null,
+    rice: null,
   });
 
   return {

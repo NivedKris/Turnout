@@ -5,6 +5,7 @@ export const NAV = [
   { href: "/tasks", label: "Tasks", code: "TASK", key: "F4" },
   { href: "/planner", label: "Planner", code: "RALC", key: "F5" },
   { href: "/activity", label: "Activity", code: "ACT", key: "F6" },
+  { href: "/settings", label: "Constraints", code: "CFG", key: "F7" },
 ] as const;
 
 /** Keep the as-of date when navigating. */

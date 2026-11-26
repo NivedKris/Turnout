@@ -64,7 +64,9 @@ export function evaluateRules(
   const portfolioCpr = ratio(portfolio.spend, portfolio.registrations);
 
   const evaluations: RuleEvaluation[] = s.campaigns.map((c) => {
-    const o = overrides[c.campaign_id] ?? {};
+    // Explicit overrides (e.g. scenario) win over thresholds stored on the campaign.
+    const stored = (c.thresholds ?? {}) as Partial<Thresholds>;
+    const o: Partial<Thresholds> = { ...stored, ...(overrides[c.campaign_id] ?? {}) };
     const windowDays = o.window_days ?? DEFAULTS.window_days;
     const w = windowDays === DEFAULTS.window_days ? window : { from: addDays(end, -(windowDays - 1)), to: end };
     const f = flows(s, { ...w, campaignId: c.campaign_id });

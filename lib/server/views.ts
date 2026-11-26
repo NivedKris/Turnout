@@ -23,6 +23,7 @@ import {
   BENCHMARKS,
 } from "@/lib/analytics";
 import { loadDataset } from "@/lib/analytics/load";
+import { getDb } from "@/lib/db";
 import { addDays, daysBetween, toDayKey } from "@/lib/time";
 import { KPIS, KPI_ORDER, type KpiDef, type KpiKey } from "@/lib/ui/kpis";
 
@@ -447,6 +448,25 @@ export async function campaignView(id: string, asOfInput?: string) {
   const regTrend = trend(s, "registrations", 7).value.by_campaign.find((x) => x.campaign_id === id) ?? null;
   const tasks = (ds.tasks ?? []).filter((t) => t.campaign_id === id).map((t) => ({ ...t, created_at: t.created_at.toISOString(), updated_at: t.updated_at.toISOString() }));
   const rates = campaignRates(s).find((r) => r.campaign_id === id) ?? null;
+  // Daily rows for the editor: deduplicated by activity_id, newest first, up to the as-of date.
+  const seen = new Set<string>();
+  const daily = ds.daily
+    .filter((d) => d.campaign_id === id && d.activity_date <= s.asOf)
+    .filter((d) => (seen.has(d.activity_id) ? false : (seen.add(d.activity_id), true)))
+    .sort((a, b) => (a.activity_date < b.activity_date ? 1 : -1))
+    .map((d) => ({
+      activity_id: d.activity_id,
+      activity_date: d.activity_date,
+      impressions: d.impressions,
+      clicks: d.clicks,
+      reported_reach: d.reported_reach,
+      landing_page_sessions: d.landing_page_sessions,
+      registration_starts: d.registration_starts,
+      marketing_spend_inr: d.marketing_spend_inr,
+      platform: d.platform,
+      origin: d.origin,
+      edited: d.edited ?? false,
+    }));
   return {
     meta: metaOf(s, ds),
     campaign: {
@@ -463,6 +483,58 @@ export async function campaignView(id: string, asOfInput?: string) {
     regTrend,
     rates,
     tasks,
+    daily,
   };
 }
 export type CampaignView = NonNullable<Awaited<ReturnType<typeof campaignView>>>;
+
+/* ───────────────────────── Tasks / activity / settings ───────────────────────── */
+
+export async function tasksView(asOfInput?: string) {
+  await connection();
+  const ds = await loadDataset();
+  const s = buildSnapshot(ds, asOfInput);
+  const owners = [...new Map([...ds.campaigns.map((c) => [c.owner_name, c.owner_id] as const), ...(ds.tasks ?? []).map((t) => [t.owner_name, t.owner_id] as const)]).keys()].sort();
+  const tasks = (ds.tasks ?? [])
+    .map((t) => ({
+      ...t,
+      created_at: t.created_at.toISOString(),
+      updated_at: t.updated_at.toISOString(),
+      overdue: t.status !== "done" && t.due_date < s.asOf,
+      campaign_name: ds.campaigns.find((c) => c.campaign_id === t.campaign_id)?.campaign_name ?? null,
+    }))
+    .sort((a, b) => (a.priority === b.priority ? (a.due_date < b.due_date ? -1 : 1) : a.priority < b.priority ? -1 : 1));
+  return { meta: metaOf(s, ds), tasks, owners, campaigns: ds.campaigns.map((c) => ({ id: c.campaign_id, name: c.campaign_name })) };
+}
+export type TasksView = Awaited<ReturnType<typeof tasksView>>;
+
+export async function activityView(limit = 200) {
+  await connection();
+  const db = await getDb();
+  const rows = await db.collection("activity").find({}, { projection: { _id: 0 } }).sort({ at: -1 }).limit(limit).toArray();
+  return rows.map((r) => ({
+    entity: r.entity as string,
+    entity_id: r.entity_id as string,
+    action: r.action as string,
+    actor: r.actor as string,
+    summary: r.summary as string,
+    at: (r.at as Date).toISOString(),
+    before: r.before === null || r.before === undefined ? null : JSON.stringify(r.before, null, 0).slice(0, 600),
+    after: r.after === null || r.after === undefined ? null : JSON.stringify(r.after, null, 0).slice(0, 600),
+  }));
+}
+
+export async function settingsView(asOfInput?: string) {
+  await connection();
+  const ds = await loadDataset();
+  const s = buildSnapshot(ds, asOfInput);
+  return {
+    meta: metaOf(s, ds),
+    targets: ds.targets
+      .map((t) => ({ ...t, effective_at: t.effective_at.toISOString(), effective_day: toDayKey(t.effective_at) }))
+      .sort((a, b) => (a.effective_at < b.effective_at ? -1 : 1)),
+    capacity: ds.settings.venue_capacity,
+    defaultAsOf: ds.settings.default_as_of,
+    quality: s.quality,
+  };
+}

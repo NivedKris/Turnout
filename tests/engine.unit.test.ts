@@ -206,6 +206,17 @@ describe("rules", () => {
   });
 });
 
+describe("stored campaign thresholds", () => {
+  it("are applied by the rules engine (data change → verdict change)", () => {
+    const d = miniDataset();
+    d.campaigns[0]!.thresholds = { min_sample: 1, scale_if: 2000, stop_if: 5000 };
+    const s = buildSnapshot(d, "2025-03-07");
+    const e = evaluateRules(s).value.evaluations.find((x) => x.campaign_id === "CA")!;
+    expect(e.verdict).toBe("scale");
+    expect(e.thresholds.basis).toBe("custom");
+  });
+});
+
 describe("trend and series", () => {
   it("contributions of additive metrics sum to 1", () => {
     const s = buildSnapshot(ds, "2025-03-07");

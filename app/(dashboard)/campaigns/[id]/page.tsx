@@ -9,6 +9,7 @@ import { withAsOf } from "@/components/shell/nav";
 import { dayLabel, inr, num, pct } from "@/lib/format";
 import { campaignView } from "@/lib/server/views";
 import { toDayKey } from "@/lib/time";
+import { DailyEditor } from "./DailyEditor";
 
 export default function CampaignPage(props: PageProps<"/campaigns/[id]">) {
   return (
@@ -126,6 +127,9 @@ async function CampaignTerminal({ params, searchParams }: PageProps<"/campaigns/
           <TerminalChart series={v.spendSeries} format="inr" initialMode="daily" height={240} />
         </Panel>
       </div>
+      <Panel code="DATA" title="Daily metrics · log, edit, import" meta={<span>{v.daily.length} days to as-of</span>}>
+        <DailyEditor campaignId={c.campaign_id} rows={v.daily} asOf={v.meta.asOf} minDay={v.meta.historyStart} />
+      </Panel>
       <Panel code="FUNL" title="Campaign funnel">
         <div className="grid gap-6 xl:grid-cols-2">
           <DotFunnel rows={v.funnel.anonymous} />

@@ -70,6 +70,22 @@ export const CampaignDoc = z.object({
   /** Planned budget for the campaign. null = not set (the source has no per-campaign budget). */
   budget_planned_inr: z.number().int().nonnegative().nullable().default(null),
   hypothesis: z.string().default(""),
+  /** Custom scale/stop thresholds. null = use portfolio-relative defaults. */
+  thresholds: z
+    .object({
+      metric: z.enum(["cost_per_registration", "ctr", "session_to_start", "confirm_rate"]).optional(),
+      scale_if: z.number().nonnegative().optional(),
+      stop_if: z.number().nonnegative().optional(),
+      min_sample: z.number().int().positive().optional(),
+      window_days: z.number().int().min(3).max(42).optional(),
+    })
+    .nullable()
+    .default(null),
+  /** RICE prioritisation inputs (reach, impact 0.25–3, confidence 0–1, effort person-weeks). */
+  rice: z
+    .object({ reach: z.number().nonnegative(), impact: z.number().positive(), confidence: z.number().min(0).max(1), effort: z.number().positive() })
+    .nullable()
+    .default(null),
   ...meta,
 });
 
@@ -88,6 +104,8 @@ export const CampaignDailyDoc = z.object({
   /** Net posted ledger amount; negative = vendor credit. */
   marketing_spend_inr: z.number().int(),
   platform: z.string(),
+  /** Set when a dataset row has been edited in the app (reset restores the original). */
+  edited: z.boolean().optional(),
   ...meta,
 });
 
