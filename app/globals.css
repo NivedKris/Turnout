@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+/* Design tokens: strictly monochrome. Dark is the default; light is a full inversion. */
+:root {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface-2: #141414;
+  --line: #262626;
+  --text: #ffffff;
+  --text-2: #a3a3a3;
+  --text-3: #8a8a8a; /* AA on --bg for small text */
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --dot-size: 2px;
+  --dot-gap: 6px;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --surface: #f7f7f7;
+  --surface-2: #ededed;
+  --line: #d9d9d9;
+  --text: #000000;
+  --text-2: #4a4a4a;
+  --text-3: #636363;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-fg: var(--text);
+  --color-fg-2: var(--text-2);
+  --color-fg-3: var(--text-3);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-dot: var(--font-doto);
+  --radius-lg: var(--radius-lg);
+  --radius-md: var(--radius-md);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
