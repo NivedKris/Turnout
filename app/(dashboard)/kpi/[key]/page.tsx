@@ -1,26 +1,25 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { BootScreen } from "@/components/brand/BootScreen";
-import { DotBars } from "@/components/matrix/charts";
-import { GlyphIcon, OriginBadge, Panel, Readout, StatusPill } from "@/components/matrix/primitives";
+import { StatusBadge } from "@/components/matrix/Metric";
+import { FilterBar } from "@/components/shell/FilterBar";
 import { withAsOf } from "@/components/shell/nav";
-import { dayLabel, inr, num, pct } from "@/lib/format";
+import { Page, PageHeader, PageSkeleton, Section } from "@/components/ui/page";
+import { inr, num, pct } from "@/lib/format";
 import { kpiView } from "@/lib/server/views";
 import { KPIS, type KpiKey } from "@/lib/ui/kpis";
-import { statusGlyph } from "@/lib/ui/status";
 import { KpiChart } from "./KpiChart";
 
 export async function generateMetadata({ params }: PageProps<"/kpi/[key]">) {
   const { key } = await params;
   const def = KPIS[key as KpiKey];
-  return { title: def ? `${def.mnemonic} · ${def.label}` : "KPI" };
+  return { title: def ? def.label : "Metric" };
 }
 
 export default function KpiPage(props: PageProps<"/kpi/[key]">) {
   return (
-    <Suspense fallback={<BootScreen label="LOADING SYSTEM" />}>
-      <KpiTerminal {...props} />
+    <Suspense fallback={<PageSkeleton rows={[["h-16"], ["h-[420px]", "h-[420px]"], ["h-72"]]} />}>
+      <KpiDetail {...props} />
     </Suspense>
   );
 }
@@ -34,49 +33,51 @@ const fmt = (v: number | string | null, f: string) => {
   return num(v);
 };
 
-async function KpiTerminal({ params, searchParams }: PageProps<"/kpi/[key]">) {
+/** Readouts a decision-maker needs, in plain language. */
+const KEEP = new Set(["Goal", "% of goal", "Projected (base)", "Projected (stretch)", "Needed / day", "Running / day (7d)", "WoW change", "Current", "Portfolio CPR (14d)", "Benchmark", "vs benchmark", "Confirmed at event start", "Of them, attended", "Walk-ins (not in rate)"]);
+const RENAME: Record<string, string> = {
+  "Projected (base)": "Projected",
+  "Projected (stretch)": "Stretch case",
+  "Needed / day": "Needed per day",
+  "Running / day (7d)": "Current pace per day",
+  "WoW change": "Change vs last week",
+  "Portfolio CPR (14d)": "All campaigns (14 days)",
+};
+
+async function KpiDetail({ params, searchParams }: PageProps<"/kpi/[key]">) {
   const { key } = await params;
   if (!(key in KPIS)) notFound();
   const sp = await searchParams;
   const v = await kpiView(key as KpiKey, typeof sp.asOf === "string" ? sp.asOf : undefined);
   const { def, tile, meta } = v;
-  const s = statusGlyph(tile.status);
+  const stats = v.stats.filter((r) => KEEP.has(r.k));
+  const rows = [...v.byCampaign].sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
+  const maxVal = Math.max(...rows.map((r) => Math.abs(r.value ?? 0)), 1e-9);
+  const hasWow = rows.some((r) => r.wow_change !== null);
 
   return (
-    <div className="flex flex-col gap-3 p-3 md:p-4">
-      {/* Command header */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border border-line bg-surface px-3 py-2 font-mono text-[12px]">
-        <span className="bg-fg px-2 py-0.5 font-bold tracking-widest text-bg">{def.mnemonic}</span>
-        <span className="text-fg-3">&lt;GO&gt;</span>
-        <span className="uppercase tracking-[0.18em] text-fg">{def.label}</span>
-        <span className="text-fg-3">
-          AS OF {dayLabel(meta.asOf).toUpperCase()} · {meta.targetVersion ?? "NO TARGET"} · {meta.phase.replace("_", " ").toUpperCase()}
-        </span>
-        <nav className="ml-auto flex flex-wrap gap-1" aria-label="Other systems">
-          {v.otherKpis.map((k) => (
-            <Link key={k.key} href={withAsOf(`/kpi/${k.key}`, meta.asOf)} className="border border-line px-1.5 py-0.5 text-[10px] tracking-wider text-fg-2 hover:border-fg hover:text-fg" title={k.label}>
-              {k.mnemonic}
+    <Page>
+      <PageHeader
+        eyebrow="Metric"
+        title={def.label}
+        subtitle={def.description}
+        actions={
+          <div className="flex items-center gap-3">
+            <StatusBadge status={tile.status} />
+            <Link href={withAsOf("/", meta.asOf)} className="text-[13px] text-fg-2 hover:text-fg">
+              ← Overview
             </Link>
-          ))}
-        </nav>
-      </div>
+          </div>
+        }
+      />
+      <FilterBar asOf={meta.asOf} min={meta.historyStart} max={meta.historyEnd} presets={meta.presets} />
 
-      <div className="grid gap-3 xl:grid-cols-12">
-        {/* Main chart */}
-        <Panel code={def.code} title="Time series" className="xl:col-span-8" meta={<span>← → inspect</span>}>
-          <div className="mb-4 flex flex-wrap items-end gap-x-6 gap-y-2">
-            <span className="font-dot text-6xl font-bold leading-none md:text-7xl">{fmt(tile.value, def.format)}</span>
-            <div className="flex flex-col gap-1 pb-1 font-mono text-[11px]">
-              <span className="flex items-center gap-2 uppercase tracking-wider">
-                <GlyphIcon glyph={s.glyph} size={12} /> {s.label}
-              </span>
-              {tile.goal !== null && (
-                <span className="text-fg-2">
-                  {pct(tile.value !== null && tile.goal ? tile.value / tile.goal : null)} of {fmt(tile.goal, def.format)} goal
-                </span>
-              )}
-              {tile.delta && <span className="text-fg-3">{tile.delta}</span>}
-            </div>
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Section title="Over time" description={def.key === "cnf" ? "Each point is the confirm rate at the end of that day." : def.key === "shw" ? "Share of confirmed registrants who had checked in by each day." : def.kind === "ratio" ? "Each point is the value over the trailing 7 days." : "Switch between daily values and the running total."} className="xl:col-span-2">
+          <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+            <span className="font-dot text-[56px] font-bold leading-none">{fmt(tile.value, def.format)}</span>
+            {tile.goal !== null && tile.value !== null && <span className="text-[15px] text-fg-2">{pct(tile.value / tile.goal)} of the {fmt(tile.goal, def.format)} goal</span>}
+            {tile.delta && <span className="text-[13px] text-fg-3">{tile.delta}</span>}
           </div>
           <KpiChart
             series={v.series}
@@ -86,101 +87,71 @@ async function KpiTerminal({ params, searchParams }: PageProps<"/kpi/[key]">) {
             format={def.format}
             additive={def.kind === "additive"}
             goal={tile.goal}
-            title={def.kind === "ratio" ? (def.key === "shw" || def.key === "cnf" ? "As-of each day" : "Rolling 7-day") : "Series"}
+            title=""
           />
-        </Panel>
+        </Section>
 
-        {/* Right column */}
-        <div className="flex flex-col gap-3 xl:col-span-4">
-          <Panel code="STAT" title="Readout">
-            {v.stats.map((r) => (
-              <Readout key={r.k} k={r.k} v={fmt(r.v, r.fmt)} />
+        <Section title="Key numbers">
+          <dl className="flex flex-col">
+            {stats.map((r) => (
+              <div key={r.k} className="flex items-baseline justify-between gap-4 border-t border-line py-3 first:border-t-0 first:pt-0">
+                <dt className="text-[14px] text-fg-2">{RENAME[r.k] ?? r.k}</dt>
+                <dd className="font-mono text-[18px] font-semibold tabular">{fmt(r.v, r.fmt)}</dd>
+              </div>
             ))}
-          </Panel>
-          <Panel code="CALC" title="How this is calculated">
-            <p className="text-sm leading-relaxed text-fg-2">{v.formula}</p>
-            <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11px]">
-              {Object.entries(v.inputs).map(([k, val]) => (
-                <div key={k} className="contents">
-                  <dt className="truncate text-fg-3">{k}</dt>
-                  <dd className="truncate text-right tabular text-fg">{String(val ?? "—")}</dd>
-                </div>
-              ))}
-            </dl>
-          </Panel>
-          <Panel code="SRC" title="Sources read">
-            <ul className="flex flex-col gap-1 font-mono text-[11px]">
-              {v.sources.map((src) => (
-                <li key={src.collection + src.filter} className="flex justify-between gap-2">
-                  <span className="text-fg">{src.collection}</span>
-                  <span className="truncate text-fg-3">{src.filter}</span>
-                  <span className="tabular text-fg-2">{num(src.records)}</span>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        </div>
+          </dl>
+        </Section>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-12">
-        <Panel code="BY" title="By campaign" className="xl:col-span-7" meta={<span>{def.kind === "additive" ? "share · WoW · contribution" : "value · WoW"}</span>}>
-          <DotBars
-            format={def.format}
-            data={[...v.byCampaign]
-              .sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity))
-              .map((c) => ({
-                key: c.campaign_id,
-                label: `${c.campaign_id} ${c.campaign_name}`,
-                value: c.value,
-                sub:
-                  def.kind === "additive"
-                    ? `${pct(c.share, 0)} · ${c.wow_change === null ? "—" : `${c.wow_change >= 0 ? "+" : ""}${fmt(c.wow_change, def.format)}`}`
-                    : c.wow_change === null
-                      ? "—"
-                      : `${c.wow_change >= 0 ? "+" : ""}${fmt(c.wow_change, def.format)}`,
-                glyph: <GlyphIcon glyph={statusGlyph(c.verdict).glyph} size={10} className="text-fg" />,
-              }))}
-          />
-          {def.key === "vis" && <p className="mt-3 font-mono text-[11px] text-fg-3">Walk-ins have no campaign and are not shown in this breakdown.</p>}
-        </Panel>
-        <Panel code="ASMP" title="Assumptions & rules applied" className="xl:col-span-5">
-          <ul className="flex flex-col gap-2">
-            {v.assumptions.map((a) => (
-              <li key={a.text} className="flex items-start gap-2 text-[13px] leading-snug">
-                <span
-                  className={`mt-0.5 shrink-0 border px-1 font-mono text-[9px] tracking-wider ${
-                    a.label === "Assumption" ? "border-dashed border-fg-3 text-fg-2" : "border-line text-fg-3"
-                  }`}
-                >
-                  {a.label.toUpperCase()}
-                </span>
-                <span className="text-fg-2">
-                  {a.text}
-                  {a.url && (
-                    <a href={a.url} target="_blank" rel="noreferrer" className="ml-1 font-mono text-[10px] text-fg-3 underline">
-                      source
-                    </a>
+      <Section title="By campaign" description={def.key === "vis" ? "Walk-ins have no campaign and are not shown here." : undefined}>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[620px] text-[14px]">
+            <thead>
+              <tr className="text-left text-[12px] text-fg-3">
+                <th className="pb-2 font-normal">Campaign</th>
+                <th className="pb-2 text-right font-normal">{def.label}</th>
+                <th className="w-[34%] pb-2 pl-6 font-normal">{def.kind === "additive" ? "Share" : "Relative"}</th>
+                {hasWow && <th className="pb-2 text-right font-normal">vs last week</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((c) => (
+                <tr key={c.campaign_id} className="border-t border-line">
+                  <td className="py-3 pr-4">
+                    <Link href={withAsOf(`/campaigns/${c.campaign_id}`, meta.asOf)} className="font-medium hover:underline">
+                      {c.campaign_name}
+                    </Link>
+                    <div className="text-[12px] text-fg-3">{c.owner_name}</div>
+                  </td>
+                  <td className="py-3 pr-4 text-right font-mono tabular">{fmt(c.value, def.format)}</td>
+                  <td className="py-3 pl-6">
+                    <div className="flex items-center gap-3">
+                      <div className="h-2 flex-1 rounded-full bg-fg/10">
+                        <div className="h-2 rounded-full bg-fg/70" style={{ width: `${c.value === null ? 0 : (Math.abs(c.value) / maxVal) * 100}%` }} />
+                      </div>
+                      {c.share !== null && <span className="w-10 text-right font-mono text-[12px] text-fg-3">{pct(c.share, 0)}</span>}
+                    </div>
+                  </td>
+                  {hasWow && (
+                    <td className="py-3 text-right font-mono text-[13px] tabular text-fg-2">
+                      {c.wow_change === null ? "—" : `${c.wow_change >= 0 ? "+" : "−"}${fmt(Math.abs(c.wow_change), def.format)}`}
+                    </td>
                   )}
-                </span>
-              </li>
-            ))}
-          </ul>
-          {v.assumptions.some((a) => a.label === "Assumption") && (
-            <p className="mt-3 flex items-center gap-2 font-mono text-[10px] text-fg-3">
-              <OriginBadge origin="assumption" /> marks modelling choices not in the source data.
-            </p>
-          )}
-        </Panel>
-      </div>
-      <div className="flex justify-between font-mono text-[10px] text-fg-3">
-        <Link href={withAsOf("/", meta.asOf)} className="hover:text-fg">
-          ← OVR &lt;GO&gt;
-        </Link>
-        <span>
-          <StatusPill status={tile.status} className="mr-2" />
-          {def.description}
-        </span>
-      </div>
-    </div>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      <nav className="flex flex-wrap items-center gap-2" aria-label="Other metrics">
+        <span className="text-[13px] text-fg-3">Other metrics</span>
+        {v.otherKpis.map((k) => (
+          <Link key={k.key} href={withAsOf(`/kpi/${k.key}`, meta.asOf)} className="rounded-full border border-line px-3 py-1 text-[12px] text-fg-2 hover:border-fg-2 hover:text-fg">
+            {k.label}
+          </Link>
+        ))}
+      </nav>
+    </Page>
   );
 }

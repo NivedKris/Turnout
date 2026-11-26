@@ -23,7 +23,10 @@ const BOOT_LINES = [
  */
 export function BootScreen({ label = "LOADING", overlay = false }: { label?: string; overlay?: boolean }) {
   const [elapsed, setElapsed] = useState(0);
+  const [light, setLight] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- read theme once on mount
+    setLight(document.documentElement.dataset.theme === "light");
     const t0 = performance.now();
     const id = setInterval(() => setElapsed((performance.now() - t0) / 1000), 100);
     return () => clearInterval(id);
@@ -34,11 +37,11 @@ export function BootScreen({ label = "LOADING", overlay = false }: { label?: str
       role="status"
       aria-live="polite"
       aria-label={`Turnout ${label.toLowerCase()}`}
-      className={`${overlay ? "fixed inset-0 z-[100]" : "relative min-h-[560px] w-full flex-1"} flex items-center justify-center overflow-hidden bg-bg`}
+      className={`${overlay ? "fixed inset-0 z-[100] h-dvh w-screen" : "relative flex min-h-[calc(100dvh-56px)] w-full flex-1"} flex items-center justify-center overflow-hidden bg-bg`}
     >
-      <div className="pointer-events-none absolute inset-0 opacity-[0.22] [mask-image:radial-gradient(ellipse_at_center,transparent_18%,black_75%)]">
+      <div className="pointer-events-none absolute inset-0 opacity-[0.18] [mask-image:radial-gradient(ellipse_at_center,transparent_25%,black_80%)]">
         <LetterGlitch
-          glitchColors={["#1f1f1f", "#4d4d4d", "#bdbdbd"]}
+          glitchColors={light ? ["#e6e6e6", "#c4c4c4", "#7a7a7a"] : ["#1f1f1f", "#4d4d4d", "#bdbdbd"]}
           characters="TURNOUT0123456789·:/<>=+-"
           glitchAmount={0.06}
           speed={0.6}
@@ -49,19 +52,19 @@ export function BootScreen({ label = "LOADING", overlay = false }: { label?: str
         />
       </div>
 
-      <div className="relative flex w-[min(92vw,460px)] flex-col items-center gap-6">
+      <div className="relative mx-auto flex w-[min(92vw,440px)] flex-col items-center justify-center gap-6 text-center">
         <TurnoutMark size={72} boot className="text-fg" />
         <GlitchText
           mode="scan"
           trigger="always"
           intensity={0.35}
           shadowColors={["#7a7a7a", "#e5e5e5"]}
-          className="font-dot text-5xl font-bold tracking-[0.12em] text-fg"
+          className="font-dot text-4xl font-bold tracking-[0.12em] text-fg sm:text-5xl"
         >
           TURNOUT
         </GlitchText>
 
-        <div className="w-full rounded-md border border-line bg-bg/80 p-3 font-mono text-[11px] leading-5 text-fg-2 backdrop-blur">
+        <div className="w-full rounded-xl border border-line bg-bg/80 p-3 text-left font-mono text-[11px] leading-5 text-fg-2 backdrop-blur">
           <TextType
             text={BOOT_LINES.join("\n")}
             as="pre"

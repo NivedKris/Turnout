@@ -21,10 +21,10 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={flip}
-      className="border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-fg-2 hover:text-fg"
+      className="rounded-full border border-line px-3 py-1.5 text-[12px] text-fg-2 hover:border-fg-2 hover:text-fg"
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
     >
-      {theme === "dark" ? "◑ Light" : "◐ Dark"}
+      {theme === "dark" ? "Light mode" : "Dark mode"}
     </button>
   );
 }

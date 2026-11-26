@@ -20,7 +20,7 @@ export function InsightTask({
 }) {
   const [open, setOpen] = useState(false);
   const [done, setDone] = useState<string | null>(null);
-  if (done) return <span className="font-mono text-[10px] text-fg-2">✓ {done}</span>;
+  if (done) return <span className="text-[12px] text-fg-2">✓ {done}</span>;
   return open ? (
     <div className="mt-2 w-full basis-full">
       <TaskForm
@@ -30,8 +30,8 @@ export function InsightTask({
       />
     </div>
   ) : (
-    <button onClick={() => setOpen(true)} className="shrink-0 border border-line px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-fg-2 hover:border-fg hover:text-fg">
-      + TASK
+    <button onClick={() => setOpen(true)} className="shrink-0 rounded-full border border-line px-3 py-1 text-[12px] text-fg-2 hover:border-fg hover:text-fg">
+      + Create task
     </button>
   );
 }

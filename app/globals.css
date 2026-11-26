@@ -171,3 +171,19 @@ body {
   background: transparent;
   box-shadow: none;
 }
+
+/* Skeleton: a dot field that breathes. */
+.tn-skeleton {
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--text) 14%, transparent) 1px, transparent 1.4px);
+  background-size: 10px 10px;
+  animation: tn-breathe 1.6s ease-in-out infinite;
+}
+@keyframes tn-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}

@@ -24,3 +24,7 @@ export function dayLabel(dayKey: string): string {
     new Date(`${dayKey}T00:00:00Z`),
   );
 }
+
+/** Value formatting for metrics: integer, rupees (Indian grouping) or percent. */
+export const fmtMetric = (v: number | null | undefined, f: "int" | "inr" | "pct") =>
+  v === null || v === undefined || !Number.isFinite(v) ? "—" : f === "pct" ? `${(v * 100).toFixed(1)}%` : `${f === "inr" ? "₹" : ""}${Math.round(v).toLocaleString("en-IN")}`;

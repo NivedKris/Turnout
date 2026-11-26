@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { BootScreen } from "@/components/brand/BootScreen";
+import { PageSkeleton } from "@/components/ui/page";
 import { tasksView } from "@/lib/server/views";
 import { CampaignForm } from "../CampaignForm";
 
@@ -7,7 +7,7 @@ export const metadata = { title: "New campaign" };
 
 export default function NewCampaignPage(props: PageProps<"/campaigns/new">) {
   return (
-    <Suspense fallback={<BootScreen label="LOADING" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <NewCampaign {...props} />
     </Suspense>
   );

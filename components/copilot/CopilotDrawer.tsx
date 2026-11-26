@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { withAsOf } from "@/components/shell/nav";
 import { ChatPane } from "./ChatPane";
 import { useCopilot } from "./CopilotProvider";
@@ -10,17 +10,9 @@ import { useCopilot } from "./CopilotProvider";
 export function CopilotDrawer() {
   const { open, setOpen, setSelectedTrace, asOf } = useCopilot();
   const router = useRouter();
-  const onTerminal = usePathname().startsWith("/terminal");
   return (
     <>
-      {!onTerminal && <button
-        onClick={() => setOpen(!open)}
-        aria-expanded={open}
-        aria-controls="tn-copilot"
-        className="fixed bottom-4 right-4 z-40 flex items-center gap-2 border border-fg bg-bg px-3 py-2 font-mono text-[11px] font-bold tracking-widest shadow-[4px_4px_0_0_var(--text)] hover:bg-fg hover:text-bg"
-      >
-        <span aria-hidden>◉</span> COPILOT <kbd className="font-normal opacity-60">⌘J</kbd>
-      </button>}
+
       <aside
         id="tn-copilot"
         aria-label="Growth analyst copilot"
@@ -51,5 +43,20 @@ export function CopilotDrawer() {
         </div>
       </aside>
     </>
+  );
+}
+
+/** Header trigger for the copilot drawer. */
+export function CopilotButton() {
+  const { open, setOpen } = useCopilot();
+  return (
+    <button
+      onClick={() => setOpen(!open)}
+      aria-expanded={open}
+      aria-controls="tn-copilot"
+      className="flex items-center gap-2 rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg hover:opacity-90"
+    >
+      Ask AI <kbd className="font-mono text-[11px] opacity-60">⌘J</kbd>
+    </button>
   );
 }

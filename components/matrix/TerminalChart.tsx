@@ -24,6 +24,17 @@ const fmtAxis = (v: number, f: ValueFormat) => {
 const dayShort = (d: string) =>
   new Date(`${d}T00:00:00Z`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", timeZone: "UTC" }).toUpperCase();
 
+/** Round tick values (1, 2, 2.5, 5 × 10^n steps) so the axis reads cleanly. */
+function niceTicks(min: number, max: number, count: number): number[] {
+  const span = max - min || 1;
+  const raw = span / count;
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((st) => st >= raw) ?? raw;
+  const out: number[] = [];
+  for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) out.push(Number(v.toFixed(10)));
+  return out;
+}
+
 const RANGES = [
   { key: "1W", days: 7 },
   { key: "2W", days: 14 },
@@ -106,9 +117,28 @@ export function TerminalChart({
   const axisDays = [...pts.map((p) => p.day), ...extDays];
   const dayIndex = new Map(axisDays.map((d, i) => [d, i]));
 
+  // Annotation labels live in a band above the plot; overlapping labels stack onto new rows.
+  const annRows: { a: ChartAnnotation; i: number; row: number }[] = [];
+  {
+    const ends: number[] = [];
+    const approx = (t: string) => t.length * 6 + 10;
+    const xs = annotations
+      .map((a) => ({ a, i: axisDays.indexOf(a.day) }))
+      .filter((x) => x.i >= 0)
+      .sort((p, q) => p.i - q.i);
+    const colGuess = (width - 72) / Math.max(1, axisDays.length);
+    for (const x of xs) {
+      const px = 8 + colGuess * x.i;
+      let row = ends.findIndex((e) => e < px);
+      if (row < 0) row = ends.length;
+      ends[row] = px + approx(x.a.label);
+      annRows.push({ ...x, row });
+    }
+  }
+  const bandH = annRows.length ? (Math.max(...annRows.map((r) => r.row)) + 1) * 13 + 4 : 0;
   const padL = 8;
   const padR = 64;
-  const padT = 16;
+  const padT = 12 + bandH;
   const padB = 28;
   const w = width;
   const h = height;
@@ -132,8 +162,7 @@ export function TerminalChart({
   const dotStep = Math.max(5, Math.min(9, colW));
   const dotR = Math.max(1, Math.min(2.2, colW / 3.2));
   const rows = Math.floor(innerH / dotStep);
-  const ticks = 5;
-  const tickVals = Array.from({ length: ticks + 1 }, (_, i) => vMin + ((vMax - vMin) * i) / ticks);
+  const tickVals = niceTicks(vMin, vMax, 5);
   const xEvery = Math.max(1, Math.ceil(nAxis / Math.max(2, Math.floor(innerW / 70))));
 
   const hi = hover ?? n - 1;
@@ -159,7 +188,7 @@ export function TerminalChart({
       {/* toolbar */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[11px]">
         {title && <span className="uppercase tracking-[0.18em] text-fg-2">{title}</span>}
-        <div className="flex border border-line" role="group" aria-label="Range">
+        <div className="flex overflow-hidden rounded-full border border-line" role="group" aria-label="Range">
           {RANGES.map((r) => (
             <button
               key={r.key}
@@ -172,7 +201,7 @@ export function TerminalChart({
           ))}
         </div>
         {additive && (
-          <div className="flex border border-line" role="group" aria-label="Mode">
+          <div className="flex overflow-hidden rounded-full border border-line" role="group" aria-label="Mode">
             {(["daily", "cumulative"] as const).map((m) => (
               <button
                 key={m}
@@ -180,7 +209,7 @@ export function TerminalChart({
                 aria-pressed={mode === m}
                 className={`px-2.5 py-1 uppercase tracking-wider ${mode === m ? "bg-fg text-bg" : "text-fg-2 hover:text-fg"}`}
               >
-                {m === "daily" ? "Daily" : "Cumul."}
+                {m === "daily" ? "Daily" : "Running total"}
               </button>
             ))}
           </div>
@@ -266,7 +295,6 @@ export function TerminalChart({
             <rect x={x(n - 1)} y={padT} width={padL + innerW - x(n - 1)} height={innerH} fill="var(--text)" opacity={0.035} />
           )}
           {fc.map((f, fi) => {
-            const last = f.points.at(-1);
             return (
               <g key={f.label}>
                 <polyline
@@ -276,11 +304,6 @@ export function TerminalChart({
                   strokeWidth={1.2}
                   strokeDasharray={fi === 0 ? "4 3" : "1 3"}
                 />
-                {last && (
-                  <text x={x(dayIndex.get(last.day) ?? 0) - 4} y={y(last.value) + (fi === 0 ? 14 : -6)} textAnchor="end" className="fill-[var(--text)] font-mono text-[9px] uppercase tracking-wider">
-                    {f.label} {fmtAxis(last.value, format)}
-                  </text>
-                )}
               </g>
             );
           })}
@@ -296,19 +319,16 @@ export function TerminalChart({
             </g>
           )}
 
-          {/* annotations */}
-          {annotations.map((a) => {
-            const i = pts.findIndex((p) => p.day === a.day);
-            if (i < 0) return null;
-            return (
-              <g key={a.day + a.label}>
-                <line x1={x(i)} x2={x(i)} y1={padT} y2={padT + innerH} stroke="var(--text-2)" strokeDasharray="2 2" />
-                <text x={x(i) + 4} y={padT + 10} className="fill-[var(--text-2)] font-mono text-[9px] uppercase tracking-wider">
-                  {a.label}
-                </text>
-              </g>
-            );
-          })}
+          {/* annotations: line in the plot, label in the band above */}
+          {annRows.map(({ a, i, row }) => (
+            <g key={a.day + a.label}>
+              <line x1={x(i)} x2={x(i)} y1={8 + row * 13 + 6} y2={padT + innerH} stroke="var(--text-3)" strokeDasharray="2 3" />
+              <circle cx={x(i)} cy={8 + row * 13 + 5} r={2} fill="var(--text-2)" />
+              <text x={x(i) + 5} y={8 + row * 13 + 8} className="fill-[var(--text-2)] text-[10px]">
+                {a.label}
+              </text>
+            </g>
+          ))}
 
           {/* x axis */}
           {axisDays.map((d, i) =>
@@ -353,7 +373,7 @@ export function TerminalChart({
 
       {/* stats strip */}
       {stats && (
-        <div className="grid grid-cols-2 gap-px border border-line bg-line font-mono text-[11px] sm:grid-cols-5">
+        <div className={`grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line font-mono text-[11px] ${additive ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
           {(
             [
               ["LAST", stats.last],
@@ -362,7 +382,9 @@ export function TerminalChart({
               ["AVG", stats.avg],
               [mode === "cumulative" ? "Δ RANGE" : "TOTAL", stats.total],
             ] as const
-          ).map(([k, v]) => (
+          )
+            .filter(([k]) => additive || (k !== "TOTAL" && k !== "Δ RANGE"))
+            .map(([k, v]) => (
             <div key={k} className="flex items-baseline justify-between gap-2 bg-surface px-2.5 py-1.5">
               <span className="text-fg-3">{k}</span>
               <span className="tabular text-fg">{fmtNum(v, format === "int" && k === "AVG" ? "dec" : format)}</span>
@@ -377,7 +399,7 @@ export function TerminalChart({
               <svg width="18" height="4">
                 <line x1="0" x2="18" y1="2" y2="2" stroke="var(--text)" strokeDasharray={fi === 0 ? "4 3" : "1 3"} />
               </svg>
-              Projection · {f.label}
+              {f.label} projection · {fmtNum(f.points.at(-1)?.value ?? NaN, format)}
             </span>
           ))}
         </div>

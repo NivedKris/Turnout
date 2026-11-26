@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { BootScreen } from "@/components/brand/BootScreen";
+import { PageSkeleton } from "@/components/ui/page";
 import { campaignView, tasksView } from "@/lib/server/views";
 import { toDayKey } from "@/lib/time";
 import { CampaignForm } from "../../CampaignForm";
@@ -9,7 +9,7 @@ export const metadata = { title: "Edit campaign" };
 
 export default function EditCampaignPage(props: PageProps<"/campaigns/[id]/edit">) {
   return (
-    <Suspense fallback={<BootScreen label="LOADING" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <EditCampaign {...props} />
     </Suspense>
   );

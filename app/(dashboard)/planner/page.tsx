@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import { BootScreen } from "@/components/brand/BootScreen";
+import { Page, PageHeader, PageSkeleton } from "@/components/ui/page";
+import { FilterBar } from "@/components/shell/FilterBar";
 import { Panel, StatusPill } from "@/components/matrix/primitives";
 import { inr, num } from "@/lib/format";
 import { plannerView } from "@/lib/server/views";
@@ -10,7 +11,7 @@ export const metadata = { title: "RALC · Planner" };
 
 export default function PlannerPage(props: PageProps<"/planner">) {
   return (
-    <Suspense fallback={<BootScreen label="MODELLING" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <Planner {...props} />
     </Suspense>
   );
@@ -31,14 +32,9 @@ async function Planner({ searchParams }: PageProps<"/planner">) {
     { label: "Capacity 2,000", changes: [{ kind: "set_capacity" as const, value: 2000 }] },
   ];
   return (
-    <div className="flex flex-col gap-3 p-3 md:p-4">
-      <div className="flex flex-wrap items-center gap-4 border border-line bg-surface px-3 py-2 font-mono text-[12px]">
-        <span className="bg-fg px-2 py-0.5 font-bold tracking-widest text-bg">RALC</span>
-        <span className="uppercase tracking-[0.18em]">Decide · reallocation & what-if</span>
-        <span className="text-fg-3">
-          base: {num(v.base.registrations)} regs · {num(v.base.visitors)} visitors · {inr(v.base.spend)} spend
-        </span>
-      </div>
+    <Page>
+      <PageHeader title="Planner" subtitle={`Move budget where it works and test what-ifs. Today's path: ${num(v.base.registrations)} registrations, ${num(v.base.visitors)} visitors, ${inr(v.base.spend)} spend.`} />
+      <FilterBar asOf={v.meta.asOf} min={v.meta.historyStart} max={v.meta.historyEnd} presets={v.meta.presets} />
 
       <Panel code="RALC" title="Suggested reallocation" meta={<span>budget left {inr(r.budget_left)} · planned {inr(r.planned_future_spend)} · unallocated {inr(r.headroom)}</span>}>
         <p className="text-[15px]">{r.reason}</p>
@@ -110,6 +106,6 @@ async function Planner({ searchParams }: PageProps<"/planner">) {
           ))}
         </ul>
       </Panel>
-    </div>
+    </Page>
   );
 }

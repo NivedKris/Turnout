@@ -1,120 +1,95 @@
 import { Suspense } from "react";
-import { BootScreen } from "@/components/brand/BootScreen";
-import { DotFunnel } from "@/components/matrix/charts";
-import { GlyphIcon, Panel } from "@/components/matrix/primitives";
+import { FunnelBars } from "@/components/matrix/FunnelBars";
+import { FilterBar, PillFilter } from "@/components/shell/FilterBar";
+import { Page, PageHeader, PageSkeleton, Section } from "@/components/ui/page";
 import { num, pct } from "@/lib/format";
 import { funnelView } from "@/lib/server/views";
-import { UrlSelect } from "../_c/UrlSelect";
 
-export const metadata = { title: "FUNL · Funnel" };
+export const metadata = { title: "Funnel" };
 
 export default function FunnelPage(props: PageProps<"/funnel">) {
   return (
-    <Suspense fallback={<BootScreen label="TRACING FUNNEL" />}>
-      <FunnelTerminal {...props} />
+    <Suspense fallback={<PageSkeleton rows={[["h-16"], ["h-80", "h-80"], ["h-40"], ["h-72"]]} />}>
+      <FunnelDetail {...props} />
     </Suspense>
   );
 }
 
-async function FunnelTerminal({ searchParams }: PageProps<"/funnel">) {
+const LABELS: Record<string, string> = {
+  clicks: "Clicks",
+  sessions: "Landing visits",
+  registration_starts: "Form starts",
+  engaged: "Engaged",
+  registered: "Registered",
+  confirmed: "Confirmed",
+  attended: "Attended",
+};
+
+async function FunnelDetail({ searchParams }: PageProps<"/funnel">) {
   const sp = await searchParams;
   const v = await funnelView(typeof sp.asOf === "string" ? sp.asOf : undefined, typeof sp.campaign === "string" ? sp.campaign : null);
   const b = v.bottleneck.bottleneck;
-  return (
-    <div className="flex flex-col gap-3 p-3 md:p-4">
-      <div className="flex flex-wrap items-center gap-4 border border-line bg-surface px-3 py-2 font-mono text-[12px]">
-        <span className="bg-fg px-2 py-0.5 font-bold tracking-widest text-bg">FUNL</span>
-        <span className="uppercase tracking-[0.18em]">Funnel · {v.campaignId ? v.campaigns.find((c) => c.id === v.campaignId)?.name : "All campaigns"}</span>
-        <span className="ml-auto">
-          <UrlSelect
-            param="campaign"
-            label="Campaign"
-            value={v.campaignId ?? ""}
-            options={[{ value: "", label: "All campaigns" }, ...v.campaigns.map((c) => ({ value: c.id, label: `${c.id} ${c.name}` }))]}
-          />
-        </span>
-      </div>
+  const campaignName = v.campaignId ? v.campaigns.find((c) => c.id === v.campaignId)?.name : null;
+  const people = v.funnel.identified.map((r) => ({ ...r, label: r.key === "identified" ? "Identified" : (LABELS[r.key] ?? r.label) }));
+  const ads = v.funnel.anonymous.map((r) => ({ ...r, label: r.key === "impressions" ? "Ad impressions" : (LABELS[r.key] ?? r.label) }));
+  const highlight = b?.key === "identified_to_registered" ? "registered" : b?.key === "show_up" ? "attended" : b?.key === "registered_to_confirmed" ? "confirmed" : b?.key === "ctr" ? "clicks" : b?.key === "session_to_start" ? "registration_starts" : null;
 
-      <div className="grid gap-3 xl:grid-cols-2">
-        <Panel code="ANON" title="Anonymous layer · platform events (not people)">
-          <DotFunnel rows={v.funnel.anonymous} />
-          <p className="mt-3 font-mono text-[11px] text-fg-3">
-            Summed daily reach {num(v.funnel.reported_reach_sum)} is not unique people (cross-day overlap unknown).
-          </p>
-        </Panel>
-        <Panel code="IDNT" title="Identified layer · distinct external people">
-          <DotFunnel rows={v.funnel.identified} highlightKey={b?.key === "identified_to_registered" ? "registered" : b?.key === "show_up" ? "attended" : null} />
-          {!v.campaignId && (
-            <p className="mt-3 font-mono text-[11px] text-fg-3">
-              + {num(v.funnel.walk_ins)} walk-ins (no registration, unattributed) = {num(v.funnel.total_visitors)} unique verified visitors.
+  return (
+    <Page>
+      <PageHeader title="Funnel" subtitle={campaignName ? `How people move from first contact to the gate, for ${campaignName}.` : "How people move from first contact to the gate, across all campaigns."} />
+      <FilterBar asOf={v.meta.asOf} min={v.meta.historyStart} max={v.meta.historyEnd} presets={v.meta.presets}>
+        <PillFilter param="campaign" label="Campaign" value={v.campaignId ?? ""} options={[{ value: "", label: "All" }, ...v.campaigns.map((c) => ({ value: c.id, label: c.name }))]} />
+      </FilterBar>
+
+      {b && !v.campaignId && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-2xl bg-fg p-5 text-bg md:p-6">
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] uppercase tracking-[0.18em] opacity-70">Where we lose people</p>
+            <p className="mt-1 text-[20px] font-semibold leading-snug">
+              {b.label}: {pct(b.actual)} convert, against {pct(b.benchmark)} needed
+            </p>
+            <p className="mt-1 text-[14px] opacity-80">Weakest here: {b.worst_campaigns.map((w) => `${w.campaign_name} (${pct(w.rate)})`).join(", ")}.</p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <Section title="People" description="Distinct external people at each step.">
+          <FunnelBars rows={people} highlight={v.campaignId ? null : highlight} highlightNote={b ? `${b.label}: ${pct(b.actual)} vs ${pct(b.benchmark)} needed` : null} />
+          {!v.campaignId && v.funnel.walk_ins > 0 && (
+            <p className="text-[13px] text-fg-3">
+              Plus {num(v.funnel.walk_ins)} walk-ins without a registration: {num(v.funnel.total_visitors)} unique visitors in total.
             </p>
           )}
-        </Panel>
+        </Section>
+        <Section title="Ad and site activity" description="Platform events, not people. A person can click many times.">
+          <FunnelBars rows={ads} highlight={v.campaignId ? null : highlight} />
+        </Section>
       </div>
 
-      <Panel code="BTNK" title="Bottleneck scan · stage conversion ÷ benchmark" meta={<span>lowest index &lt; 1 with n ≥ 50</span>}>
+      <Section title="Conversion by campaign" description="Each step's conversion. ▼ marks steps below their benchmark.">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] font-mono text-[12px] tabular">
+          <table className="w-full min-w-[820px] text-[14px]">
             <thead>
-              <tr className="border-b border-line text-left text-[10px] uppercase tracking-wider text-fg-3">
-                <th className="py-2 pr-3 font-normal">Stage</th>
-                <th className="py-2 pr-3 text-right font-normal">Actual</th>
-                <th className="py-2 pr-3 text-right font-normal">Benchmark</th>
-                <th className="py-2 pr-3 text-right font-normal">Index</th>
-                <th className="py-2 pr-3 text-right font-normal">n</th>
-                <th className="py-2 pr-3 font-normal">Benchmark source</th>
-                <th className="py-2 font-normal">Weakest campaigns</th>
-              </tr>
-            </thead>
-            <tbody>
-              {v.bottleneck.stages.map((st) => (
-                <tr key={st.key} className={`border-b border-dashed border-line last:border-0 ${b?.key === st.key ? "bg-surface-2" : ""}`}>
-                  <td className="py-2 pr-3">
-                    <span className="flex items-center gap-2">
-                      <GlyphIcon glyph={st.index === null ? "dotted" : st.index >= 1 ? "solid" : st.index >= 0.9 ? "half" : "hollow"} size={10} />
-                      {st.label}
-                      {b?.key === st.key && <span className="bg-fg px-1 text-[9px] font-bold text-bg">BOTTLENECK</span>}
-                    </span>
-                  </td>
-                  <td className="py-2 pr-3 text-right">{pct(st.actual)}</td>
-                  <td className="py-2 pr-3 text-right text-fg-2">{pct(st.benchmark)}</td>
-                  <td className="py-2 pr-3 text-right font-bold">{st.index === null ? "—" : st.index.toFixed(2)}</td>
-                  <td className="py-2 pr-3 text-right text-fg-3">{num(st.denominator)}</td>
-                  <td className="py-2 pr-3 text-[11px] text-fg-3">
-                    {st.benchmark_source.label} · {st.benchmark_source.text}
-                  </td>
-                  <td className="py-2 text-[11px] text-fg-2">{st.worst_campaigns.map((w) => `${w.campaign_id} ${pct(w.rate)}`).join(" · ")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-
-      <Panel code="MTRX" title="Conversion matrix · campaign × stage" meta={<span>■ below benchmark</span>}>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] font-mono text-[12px] tabular">
-            <thead>
-              <tr className="border-b border-line text-left text-[10px] uppercase tracking-wider text-fg-3">
-                <th className="py-2 pr-3 font-normal">Campaign</th>
+              <tr className="text-left text-[12px] text-fg-3">
+                <th className="pb-2 font-normal">Campaign</th>
                 {v.stageLabels.map((s) => (
-                  <th key={s.key} className="py-2 pr-3 text-right font-normal">
-                    →{s.label}
+                  <th key={s.key} className="pb-2 text-right font-normal">
+                    {LABELS[s.key] ?? s.label}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {v.matrix.map((row) => (
-                <tr key={row.campaign_id} className="border-b border-dashed border-line last:border-0">
-                  <td className="py-2 pr-3">
-                    <span className="text-fg-3">{row.campaign_id}</span> {row.campaign_name}
-                  </td>
+                <tr key={row.campaign_id} className="border-t border-line">
+                  <td className="py-3 pr-4 font-medium">{row.campaign_name}</td>
                   {row.stages.map((st) => {
                     const below = st.conversion !== null && st.benchmark !== null && st.conversion < st.benchmark;
                     return (
-                      <td key={st.key} className="py-2 pr-3 text-right">
-                        <span className={below ? "bg-fg px-1 text-bg" : ""}>{pct(st.conversion)}</span>
+                      <td key={st.key} className={`py-3 pr-2 text-right font-mono tabular ${below ? "font-semibold text-fg" : "text-fg-2"}`}>
+                        {below && <span aria-label="below benchmark">▼ </span>}
+                        {pct(st.conversion)}
                       </td>
                     );
                   })}
@@ -123,8 +98,7 @@ async function FunnelTerminal({ searchParams }: PageProps<"/funnel">) {
             </tbody>
           </table>
         </div>
-      </Panel>
-      <p className="font-mono text-[11px] text-fg-3">{v.formula}</p>
-    </div>
+      </Section>
+    </Page>
   );
 }

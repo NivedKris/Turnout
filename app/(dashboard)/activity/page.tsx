@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { BootScreen } from "@/components/brand/BootScreen";
+import { Page, PageHeader, PageSkeleton } from "@/components/ui/page";
 import { OriginBadge, Panel } from "@/components/matrix/primitives";
 import { activityView } from "@/lib/server/views";
 import { formatIst } from "@/lib/time";
@@ -8,7 +8,7 @@ export const metadata = { title: "ACT · Activity" };
 
 export default function ActivityPage() {
   return (
-    <Suspense fallback={<BootScreen label="LOADING LOG" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <Activity />
     </Suspense>
   );
@@ -17,12 +17,8 @@ export default function ActivityPage() {
 async function Activity() {
   const rows = await activityView(300);
   return (
-    <div className="flex flex-col gap-3 p-3 md:p-4">
-      <div className="flex flex-wrap items-center gap-4 border border-line bg-surface px-3 py-2 font-mono text-[12px]">
-        <span className="bg-fg px-2 py-0.5 font-bold tracking-widest text-bg">ACT</span>
-        <span className="uppercase tracking-[0.18em]">Activity log</span>
-        <span className="text-fg-3">Append-only. Every change by a user or a confirmed copilot proposal. Times in IST.</span>
-      </div>
+    <Page>
+      <PageHeader title="Activity" subtitle="Every change made by people or confirmed from the copilot, newest first. Times in IST." />
       <Panel code="LOG" title={`${rows.length} most recent changes`}>
         <ol className="flex flex-col divide-y divide-line">
           {rows.map((r, i) => (
@@ -49,6 +45,6 @@ async function Activity() {
         </ol>
         {rows.length === 0 && <p className="font-mono text-[11px] text-fg-3">No activity yet.</p>}
       </Panel>
-    </div>
+    </Page>
   );
 }

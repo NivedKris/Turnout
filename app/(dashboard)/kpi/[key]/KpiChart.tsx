@@ -39,16 +39,16 @@ export function KpiChart({
         title={title}
         height={340}
       />
-      <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
-        <span className="mr-1 uppercase tracking-wider text-fg-3">Overlay</span>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="mr-1 text-[13px] text-fg-2">Compare with</span>
         {compare.map((c) => (
           <button
             key={c.id}
             onClick={() => toggle(c.id)}
             aria-pressed={on.includes(c.id)}
-            className={`border px-2 py-0.5 tracking-wider ${on.includes(c.id) ? "border-fg bg-fg text-bg" : "border-line text-fg-2 hover:text-fg"}`}
+            className={`rounded-full border px-3 py-1 text-[12px] ${on.includes(c.id) ? "border-fg bg-fg text-bg" : "border-line text-fg-2 hover:border-fg-2 hover:text-fg"}`}
           >
-            {c.id} {c.label}
+            {c.label}
           </button>
         ))}
       </div>

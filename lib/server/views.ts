@@ -27,6 +27,7 @@ import { loadDataset, servedVersion } from "@/lib/analytics/load";
 import { getDb } from "@/lib/db";
 import { addDays, daysBetween, toDayKey } from "@/lib/time";
 import { KPIS, KPI_ORDER, type KpiDef, type KpiKey } from "@/lib/ui/kpis";
+import { asOfPresets } from "@/components/shell/nav";
 
 /**
  * View models for pages: plain JSON built only from engine outputs.
@@ -47,10 +48,18 @@ export type Meta = {
   festival: string;
   city: string;
   capacity: number;
+  presets: { day: string; label: string }[];
 };
 
 function metaOf(s: Snapshot, ds: Dataset): Meta {
   return {
+    presets: asOfPresets({
+      historyStart: ds.event.history_start,
+      historyEnd: ds.event.history_end,
+      eventStartDay: s.eventStartDay,
+      regCloseDay: s.regCloseDay,
+      targetRevisions: ds.targets.map((t) => toDayKey(t.effective_at)).filter((d) => d > ds.event.history_start),
+    }),
     asOf: s.asOf,
     phase: s.phase,
     historyStart: ds.event.history_start,
@@ -320,8 +329,48 @@ async function overviewViewRaw(asOfInput?: string) {
     }
   }
 
+  // "What to do next": the few actions that matter, in priority order, in plain language.
+  const actions: { id: string; title: string; why: string; impact?: string; campaignId?: string; owner?: string; href?: string }[] = [];
+  const regGoal = goals.value.goals.find((g) => g.key === "registrations");
+  if (regGoal && (regGoal.status === "at_risk" || regGoal.status === "off_track") && regGoal.required_per_day && regGoal.current_per_day !== null) {
+    actions.push({
+      id: "gap",
+      title: `Lift registrations to ${Math.ceil(regGoal.required_per_day)} a day`,
+      why: `Running at ${regGoal.current_per_day.toFixed(0)} a day. At this pace we reach ${Math.round(regGoal.projected ?? 0).toLocaleString("en-IN")} of ${regGoal.goal?.toLocaleString("en-IN")}.`,
+      href: "/kpi/reg",
+    });
+  }
+  const ra = reallocation(s).value;
+  if (ra.moves.length && ra.effect) {
+    const total = ra.moves.reduce((a, m) => a + m.amount, 0);
+    actions.push({
+      id: "realloc",
+      title: `Move ₹${total.toLocaleString("en-IN")} to the cheapest channels`,
+      why: `From ${[...new Set(ra.moves.map((m) => m.from_name))].join(" and ")} to ${[...new Set(ra.moves.map((m) => m.to_name))].slice(0, 3).join(", ")}.`,
+      impact: `≈ +${Math.round(ra.effect.delta.registrations)} registrations, +${Math.round(ra.effect.delta.visitors)} visitors`,
+      href: "/planner",
+    });
+  }
+  for (const e of rules.value.evaluations.filter((x) => x.verdict === "stop" && x.status !== "stopped").slice(0, 2)) {
+    actions.push({ id: `stop-${e.campaign_id}`, title: `Stop or rework ${e.campaign_name}`, why: e.reason, campaignId: e.campaign_id, owner: e.owner_name, href: `/campaigns/${e.campaign_id}` });
+  }
+  if (bn.value.bottleneck) {
+    const b = bn.value.bottleneck;
+    actions.push({
+      id: "leak",
+      title: `Fix the leak at ${b.label.toLowerCase()}`,
+      why: `${((b.actual ?? 0) * 100).toFixed(1)}% convert vs ${(b.benchmark * 100).toFixed(1)}% needed. Weakest: ${b.worst_campaigns.map((w) => w.campaign_name).join(", ")}.`,
+      href: "/funnel",
+    });
+  }
+
+  const sparkFrom = addDays(s.asOf, -20);
+  const campaignTrends = Object.fromEntries(s.campaigns.map((c) => [c.campaign_id, series(s, "registrations", { campaignId: c.campaign_id, from: sparkFrom }).map((p) => p.value)]));
+
   return {
     meta: metaOf(s, ds),
+    actions: actions.slice(0, 4),
+    campaignTrends,
     tiles: tiles(ds, s),
     goals: goals.value,
     projection: { base: base.value, stretch: stretch.value, formula: base.formula, assumptions: base.assumptions },
@@ -371,8 +420,10 @@ async function kpiViewRaw(key: KpiKey, asOfInput?: string) {
     };
   });
 
-  const seriesAll = kpiSeries(ds, s, key);
-  const compare = s.campaigns.map((c) => ({ id: c.campaign_id, label: c.campaign_name, points: kpiSeries(ds, s, key, c.campaign_id) }));
+  // Show-up only exists from event day; don't draw months of zeros before it.
+  const seriesFrom = key === "shw" ? addDays(s.eventStartDay, -2) : undefined;
+  const seriesAll = kpiSeries(ds, s, key, null, seriesFrom);
+  const compare = s.campaigns.map((c) => ({ id: c.campaign_id, label: c.campaign_name, points: kpiSeries(ds, s, key, c.campaign_id, seriesFrom) }));
 
   // Forecast lines (cumulative): base and stretch run-rates from the as-of to the relevant close.
   const forecast: { label: string; points: { day: string; value: number }[] }[] = [];
@@ -425,6 +476,15 @@ async function kpiViewRaw(key: KpiKey, asOfInput?: string) {
   } else {
     stats.push({ k: "Current", v: total, fmt: def.format });
     if (key === "cpr") stats.push({ k: "Portfolio CPR (14d)", v: rules.portfolio_cpr, fmt: "inr" });
+    const bench = key === "ctr" ? BENCHMARKS.ctr.value : key === "cnf" ? BENCHMARKS.registered_to_confirmed.value : key === "shw" ? BENCHMARKS.show_up_free.value : null;
+    if (bench !== null) {
+      stats.push({ k: "Benchmark", v: bench, fmt: "pct" });
+      if (total !== null) stats.push({ k: "vs benchmark", v: `${total >= bench ? "+" : "−"}${(Math.abs(total - bench) * 100).toFixed(1)} pts`, fmt: "text" });
+    }
+    if (key === "shw" && s.statusAtEventStart) {
+      const atStart = statusCounts(s, null, true)!;
+      stats.push({ k: "Confirmed at event start", v: atStart.confirmed, fmt: "int" }, { k: "Of them, attended", v: registeredVisitors(s), fmt: "int" }, { k: "Walk-ins (not in rate)", v: flows(s).walk_ins, fmt: "int" });
+    }
   }
   if (tr) {
     stats.push(

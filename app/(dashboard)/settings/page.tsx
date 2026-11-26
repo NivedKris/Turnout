@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import { BootScreen } from "@/components/brand/BootScreen";
+import { Page, PageHeader, PageSkeleton } from "@/components/ui/page";
+import { FilterBar } from "@/components/shell/FilterBar";
 import { OriginBadge, Panel } from "@/components/matrix/primitives";
 import { inr, num } from "@/lib/format";
 import { settingsView } from "@/lib/server/views";
@@ -10,7 +11,7 @@ export const metadata = { title: "CFG · Constraints" };
 
 export default function SettingsPage(props: PageProps<"/settings">) {
   return (
-    <Suspense fallback={<BootScreen label="LOADING" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <Settings {...props} />
     </Suspense>
   );
@@ -22,11 +23,9 @@ async function Settings({ searchParams }: PageProps<"/settings">) {
   const last = v.targets.at(-1);
   const q = v.quality;
   return (
-    <div className="flex flex-col gap-3 p-3 md:p-4">
-      <div className="flex flex-wrap items-center gap-4 border border-line bg-surface px-3 py-2 font-mono text-[12px]">
-        <span className="bg-fg px-2 py-0.5 font-bold tracking-widest text-bg">CFG</span>
-        <span className="uppercase tracking-[0.18em]">Targets & constraints</span>
-      </div>
+    <Page>
+      <PageHeader title="Targets & constraints" subtitle="Change goals, budget and capacity. Every change recalculates the dashboard and the copilot." />
+      <FilterBar asOf={v.meta.asOf} min={v.meta.historyStart} max={v.meta.historyEnd} presets={v.meta.presets} />
       <Panel code="TGT" title="Target versions">
         <table className="w-full font-mono text-[12px] tabular">
           <thead>
@@ -75,6 +74,6 @@ async function Settings({ searchParams }: PageProps<"/settings">) {
           <p>Non-external registrations excluded: {q.excludedRegistrationsNonExternal}</p>
         </div>
       </Panel>
-    </div>
+    </Page>
   );
 }

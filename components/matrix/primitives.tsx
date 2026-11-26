@@ -93,6 +93,24 @@ export function LedProgress({
   );
 }
 
+/* ───────────────────────── Line sparkline ───────────────────────── */
+
+/** Minimal line + end dot; reads cleanly at small sizes in tables. */
+export function LineSpark({ points, width = 112, height = 24, className = "" }: { points: number[]; width?: number; height?: number; className?: string }) {
+  if (points.length < 2) return <svg width={width} height={height} className={className} aria-hidden />;
+  const max = Math.max(...points);
+  const min = Math.min(...points);
+  const x = (i: number) => (i / (points.length - 1)) * (width - 4) + 2;
+  const y = (v: number) => height - 3 - ((v - min) / (max - min || 1)) * (height - 6);
+  const d = points.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+  return (
+    <svg width={width} height={height} className={className} aria-hidden>
+      <path d={d} fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round" strokeLinecap="round" opacity={0.85} />
+      <circle cx={x(points.length - 1)} cy={y(points.at(-1)!)} r={2.2} fill="currentColor" />
+    </svg>
+  );
+}
+
 /* ───────────────────────── Dot sparkline ───────────────────────── */
 
 /** A ghost sparkline drawn as dots: one column per point, the top dot lit. */
@@ -129,7 +147,7 @@ export function DotSparkline({ points, height = 28, className = "" }: { points: 
 
 /* ───────────────────────── Terminal panel ───────────────────────── */
 
-/** Bloomberg-style panel: code tag, title, optional right-side meta, hairline frame. */
+/** Card with a clear title; the optional code is a quiet secondary label. */
 export function Panel({
   code,
   title,
@@ -146,13 +164,13 @@ export function Panel({
   bodyClassName?: string;
 }) {
   return (
-    <section className={`flex min-w-0 flex-col rounded-md border border-line bg-surface ${className}`}>
-      <header className="flex items-center gap-3 border-b border-line px-3 py-2">
-        {code && <span className="bg-fg px-1.5 py-px font-mono text-[10px] font-bold tracking-widest text-bg">{code}</span>}
-        <h3 className="truncate font-mono text-[11px] uppercase tracking-[0.18em] text-fg-2">{title}</h3>
-        {meta && <div className="ml-auto flex items-center gap-2 font-mono text-[11px] text-fg-3">{meta}</div>}
+    <section className={`flex min-w-0 flex-col rounded-2xl border border-line bg-surface ${className}`}>
+      <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-5 pt-4">
+        <h3 className="truncate text-[16px] font-semibold tracking-tight text-fg">{title}</h3>
+        {code && <span className="font-mono text-[10px] tracking-widest text-fg-3">{code}</span>}
+        {meta && <div className="ml-auto flex items-center gap-2 text-[12px] text-fg-3">{meta}</div>}
       </header>
-      <div className={`min-w-0 flex-1 p-3 ${bodyClassName}`}>{children}</div>
+      <div className={`min-w-0 flex-1 p-5 pt-3 ${bodyClassName}`}>{children}</div>
     </section>
   );
 }
@@ -160,8 +178,8 @@ export function Panel({
 /** Small key/value readout row used in stats panels. */
 export function Readout({ k, v, sub }: { k: string; v: ReactNode; sub?: ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-dashed border-line py-1.5 last:border-0">
-      <span className="font-mono text-[11px] uppercase tracking-wider text-fg-3">{k}</span>
+    <div className="flex items-baseline justify-between gap-3 border-b border-line py-2 last:border-0">
+      <span className="text-[13px] text-fg-2">{k}</span>
       <span className="text-right font-mono text-sm tabular text-fg">
         {v}
         {sub && <span className="ml-2 text-[11px] text-fg-3">{sub}</span>}

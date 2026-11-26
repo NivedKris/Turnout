@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { BootScreen } from "@/components/brand/BootScreen";
+import { Page, PageHeader, PageSkeleton } from "@/components/ui/page";
+import { FilterBar } from "@/components/shell/FilterBar";
 import { OriginBadge, Panel, StatusPill } from "@/components/matrix/primitives";
 import { withAsOf } from "@/components/shell/nav";
 import { inr, num, pct } from "@/lib/format";
@@ -10,7 +11,7 @@ export const metadata = { title: "CMP · Campaigns" };
 
 export default function CampaignsPage(props: PageProps<"/campaigns">) {
   return (
-    <Suspense fallback={<BootScreen label="LOADING CAMPAIGNS" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <Campaigns {...props} />
     </Suspense>
   );
@@ -20,15 +21,9 @@ async function Campaigns({ searchParams }: PageProps<"/campaigns">) {
   const sp = await searchParams;
   const v = await campaignsView(typeof sp.asOf === "string" ? sp.asOf : undefined);
   return (
-    <div className="flex flex-col gap-3 p-3 md:p-4">
-      <div className="flex flex-wrap items-center gap-4 border border-line bg-surface px-3 py-2 font-mono text-[12px]">
-        <span className="bg-fg px-2 py-0.5 font-bold tracking-widest text-bg">CMP</span>
-        <span className="uppercase tracking-[0.18em]">Campaigns · {v.rows.length}</span>
-        <span className="text-fg-3">portfolio CPR (14d) {inr(v.portfolioCpr)}</span>
-        <Link href={withAsOf("/campaigns/new", v.meta.asOf)} className="ml-auto bg-fg px-2 py-1 text-[11px] font-bold tracking-widest text-bg">
-          + NEW CAMPAIGN
-        </Link>
-      </div>
+    <Page>
+      <PageHeader title="Campaigns" subtitle="Every campaign, judged on its cost per registration over the last 14 days." actions={<Link href={withAsOf("/campaigns/new", v.meta.asOf)} className="rounded-full bg-fg px-4 py-1.5 text-[13px] font-medium text-bg">+ New campaign</Link>} />
+      <FilterBar asOf={v.meta.asOf} min={v.meta.historyStart} max={v.meta.historyEnd} presets={v.meta.presets} />
       <Panel code="LIST" title="All campaigns · rule verdicts from the last 14 days">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] font-mono text-[12px] tabular">
@@ -72,6 +67,6 @@ async function Campaigns({ searchParams }: PageProps<"/campaigns">) {
           <OriginBadge origin="user" /> campaigns created in the app are labelled wherever they appear.
         </p>
       </Panel>
-    </div>
+    </Page>
   );
 }
