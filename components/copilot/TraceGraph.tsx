@@ -65,7 +65,7 @@ const nodeTypes = { trace: TraceNodeView };
 export const SUMMARY_ASM = "sum:assumptions";
 export const SUMMARY_CLM = "sum:claims";
 
-function collapse(trace: Trace, opts: { assumptions: boolean; claims: boolean }) {
+export function collapse(trace: Trace, opts: { assumptions: boolean; claims: boolean }) {
   const asm = trace.nodes.filter((n) => n.kind === "assumption");
   const clm = trace.nodes.filter((n) => n.kind === "claim");
   const nodes = trace.nodes.filter((n) => (opts.assumptions || n.kind !== "assumption") && (opts.claims || n.kind !== "claim"));

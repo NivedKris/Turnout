@@ -96,6 +96,15 @@ export function resolveCampaign(ds: Dataset, q: string): { match: Dataset["campa
   return { match: null, candidates: (scored.length ? scored.map((x) => x.c) : all).map((c) => ({ id: c.campaign_id, name: c.campaign_name })) };
 }
 
+/** One plain sentence per decision outcome, so even a small model states the result. */
+function outcomeSummary(o: ReturnType<typeof decisionOutcome>): string {
+  const label = { cost_per_registration: "cost per registration", registrations_per_day: "registrations per day", ctr: "click-through rate", session_to_start: "visit → form start", confirm_rate: "confirm rate", cancel_rate: "cancellation rate", show_up_rate: "show-up rate", cost_per_visitor: "cost per visitor" }[o.metric];
+  const f = (v: number | null) => (v === null ? "n/a" : o.metric.startsWith("cost") ? `₹${Math.round(v).toLocaleString("en-IN")}` : o.metric === "registrations_per_day" ? v.toFixed(1) : `${(v * 100).toFixed(1)}%`);
+  if (o.status === "future") return "Not measurable: the decision is after the selected date.";
+  if (o.status === "pending" || o.improved === null) return `Not yet measurable (${o.note}).`;
+  return `${o.improved ? "WORKED (improved)" : "DID NOT WORK (worse)"}: ${label} ${f(o.before)} → ${f(o.after)}${o.change_pct !== null ? ` (${o.change_pct > 0 ? "+" : ""}${(o.change_pct * 100).toFixed(0)}%)` : ""}, ${o.status === "partial" ? "partial window" : "14 days after vs 14 before"}. Association, not proof of cause.`;
+}
+
 /* ─────────────────────────── tools ─────────────────────────── */
 
 export function buildTools(ctx: ToolContext) {
@@ -560,7 +569,10 @@ export function buildTools(ctx: ToolContext) {
           visitors: r1(e.visitors_actual_or_projected),
           visitors_basis: e.visitors_basis,
           planned_visitors: b.expected_visitors,
-          decisions: (ctx.ds.decisions ?? []).filter((d) => d.bet_id === b.bet_id).map((d) => ({ id: d.decision_id, decision: d.decision, title: d.title, as_of: d.as_of, outcome: decisionOutcome(d, s, ctx.ds) })),
+          decisions: (ctx.ds.decisions ?? []).filter((d) => d.bet_id === b.bet_id).map((d) => {
+            const o = decisionOutcome(d, s, ctx.ds);
+            return { id: d.decision_id, decision: d.decision, title: d.title, as_of: d.as_of, outcome_summary: outcomeSummary(o), before: r4(o.before), after: r4(o.after) };
+          }),
         };
       }),
     }),
@@ -578,13 +590,19 @@ export function buildTools(ctx: ToolContext) {
     }),
 
     list_decisions: tool({
-      description: "Logged scale/change/stop decisions with evidence at the time and the measured outcome (14 days after vs 14 before).",
+      description: "Logged scale/change/stop decisions and whether each WORKED: outcome_summary states it (14 days after vs 14 before). Use it to answer 'did X work?'.",
       inputSchema: z.object({ as_of: asOfArg }),
       execute: traced("list_decisions", ({ as_of }: { as_of?: string }, id) => {
         const s = snap(as_of);
         const rows = ctx.ds.decisions ?? [];
         rec.source(id, { collection: "decisions", records: rows.length, filter: "all" });
-        return { as_of: s.asOf, decisions: rows.map((d) => ({ id: d.decision_id, decision: d.decision, title: d.title, bet: d.bet_id, campaign: d.campaign_id, as_of: d.as_of, rationale: d.rationale, outcome: decisionOutcome(d, s, ctx.ds) })) };
+        return {
+          as_of: s.asOf,
+          decisions: rows.map((d) => {
+            const o = decisionOutcome(d, s, ctx.ds);
+            return { id: d.decision_id, decision: d.decision, title: d.title, bet: d.bet_id, campaign: d.campaign_id, decided_on: d.as_of, rationale: d.rationale, outcome_summary: outcomeSummary(o), metric: o.metric, before: r4(o.before), after: r4(o.after), change_pct: r4(o.change_pct) };
+          }),
+        };
       }),
     }),
 

@@ -40,6 +40,8 @@ export function numericLeaves(outputs: { nodeId: string; output: unknown }[]): {
   const walk = (nodeId: string, v: unknown, depth: number) => {
     if (depth > 8) return;
     if (typeof v === "number" && Number.isFinite(v)) leaves.push({ nodeId, value: v });
+    // Numbers written inside tool-produced text (e.g. "₹195 → ₹246") are tool output too.
+    else if (typeof v === "string" && v.length < 600) for (const c of extractClaims(v)) leaves.push({ nodeId, value: c.isPct ? c.value / 100 : c.value });
     else if (Array.isArray(v)) v.forEach((x) => walk(nodeId, x, depth + 1));
     else if (v && typeof v === "object") Object.values(v).forEach((x) => walk(nodeId, x, depth + 1));
   };

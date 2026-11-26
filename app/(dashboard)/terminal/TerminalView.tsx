@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import { ChatPane } from "@/components/copilot/ChatPane";
 import { traceOf, useCopilot } from "@/components/copilot/CopilotProvider";
-import { Inspector, SUMMARY_ASM, SUMMARY_CLM, TraceGraph, TraceStats } from "@/components/copilot/TraceGraph";
+import { TraceColumns } from "@/components/copilot/TraceColumns";
+import { Inspector, SUMMARY_ASM, SUMMARY_CLM, TraceStats } from "@/components/copilot/TraceGraph";
 import type { Trace } from "@/lib/copilot/trace-types";
 
 /** Bloomberg-style copilot terminal: chat | live execution graph | inspector + exec log. */
@@ -56,7 +57,7 @@ export function TerminalView() {
         </span>
       </div>
 
-      <div className="grid min-h-0 gap-2 lg:grid-cols-[minmax(320px,1fr)_minmax(0,2fr)_minmax(260px,0.9fr)]">
+      <div className="grid min-h-0 gap-2 lg:grid-cols-[290px_minmax(0,1fr)_300px]">
         <section className="flex min-h-0 flex-col border border-line bg-surface" aria-label="Chat">
           <header className="border-b border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-3">01 · Conversation</header>
           <div className="min-h-0 flex-1">
@@ -66,12 +67,13 @@ export function TerminalView() {
 
         <section className="flex min-h-0 flex-col border border-line bg-surface" aria-label="Execution graph">
           <header className="flex items-center gap-2 border-b border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-3">
-            02 · Execution graph {status === "streaming" && <span className="animate-pulse text-fg">● LIVE</span>}
-            <span className="ml-auto normal-case tracking-normal">question → model steps → tools → engine → sources/rules/assumptions → claims → answer</span>
+            <span className="flex items-center gap-2"><span className={`h-1.5 w-1.5 rounded-full bg-fg ${status === "streaming" ? "animate-pulse" : ""}`} /> Turnout trace</span>
+            {trace && <span className="min-w-0 truncate normal-case tracking-normal text-fg-2">“{(trace.nodes.find((n) => n.id === "q")?.detail?.text as string | undefined) ?? ""}”</span>}
+            <span className="ml-auto shrink-0 normal-case tracking-normal">tap any step to see why</span>
           </header>
           <div className="min-h-0 flex-1 p-1">
             {trace ? (
-              <TraceGraph
+              <TraceColumns
                 trace={trace}
                 selected={node}
                 onSelect={(id) => {
@@ -82,7 +84,6 @@ export function TerminalView() {
                 }}
                 showAssumptions={asm}
                 showClaims={claims}
-                height="100%"
               />
             ) : (
               <div className="flex h-full items-center justify-center p-6 text-center font-mono text-[11px] text-fg-3">
@@ -93,12 +94,16 @@ export function TerminalView() {
         </section>
 
         <section className="flex min-h-0 flex-col gap-2" aria-label="Inspector">
-          <div className="flex min-h-0 flex-1 flex-col border border-line bg-surface">
-            <header className="border-b border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-3">03 · Inspector</header>
-            <div className="min-h-0 flex-1 p-3">{trace ? <Inspector trace={trace} id={node} opts={{ assumptions: asm, claims }} /> : null}</div>
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto border border-line bg-surface p-4">
+            {trace ? <Verdict trace={trace} /> : <p className="font-mono text-[11px] text-fg-3">No turn yet.</p>}
+            {trace && node && (
+              <div className="mt-4 border-t border-line pt-3">
+                <Inspector trace={trace} id={node} opts={{ assumptions: asm, claims }} />
+              </div>
+            )}
           </div>
           <div className="flex max-h-[38%] min-h-0 flex-col border border-line bg-bg">
-            <header className="border-b border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-3">04 · Exec log</header>
+            <header className="border-b border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-3">Audit tape</header>
             <ol className="min-h-0 flex-1 overflow-y-auto p-2 font-mono text-[10px] leading-relaxed">
               {trace?.nodes
                 .filter((n) => n.kind === "llm" || n.kind === "tool" || n.kind === "proposal" || n.kind === "answer")
@@ -106,7 +111,7 @@ export function TerminalView() {
                 .map((n) => (
                   <li key={n.id}>
                     <button onClick={() => setNode(n.id)} className="w-full truncate text-left hover:text-fg">
-                      <span className="text-fg-3">+{String(n.t).padStart(5, " ")}ms</span>{" "}
+                      <span className="text-fg-3">{clock(trace.started_at, n.t)}</span>{" "}
                       <span className={n.status === "fallback" || n.status === "error" ? "text-fg underline decoration-dotted" : "text-fg-2"}>
                         {n.kind.toUpperCase().padEnd(6, " ")} {n.label}
                       </span>{" "}
@@ -141,5 +146,47 @@ function LayerToggle({ on, onClick, label, count }: { on: boolean; onClick: () =
       {on ? "Hide" : "Show"} {label}
       <span className={`font-mono text-[11px] ${on ? "opacity-70" : "text-fg-3"}`}>{count}</span>
     </button>
+  );
+}
+
+const clock = (start: string, t: number) => new Date(Date.parse(start) + t).toLocaleTimeString("en-IN", { hour12: false, timeZone: "Asia/Kolkata" });
+
+/** Big verdict word, two stat cards and the "because" list, like a decision receipt. */
+function Verdict({ trace }: { trace: Trace }) {
+  const bad = trace.stats.unsupported_claims;
+  const word = !trace.done ? "THINKING" : bad ? "CHECK" : trace.stats.claims ? "GROUNDED" : "ANSWERED";
+  const tools = trace.nodes.filter((n) => n.kind === "tool");
+  const because = tools.map((t) => {
+    const engines = trace.edges.filter((e) => e.from === t.id).map((e) => trace.nodes.find((x) => x.id === e.to)).filter((x) => x?.kind === "engine" || x?.kind === "proposal");
+    const sources = new Set(
+      engines.flatMap((en) => trace.edges.filter((e) => e.from === en!.id).map((e) => trace.nodes.find((x) => x.id === e.to)).filter((x) => x?.kind === "source").map((x) => x!.label)),
+    );
+    return `${t.label.replace(/_/g, " ")}${engines.length ? `: ${engines.map((x) => x!.label).join(", ")}` : ""}${sources.size ? `, reading ${[...sources].join(", ")}` : ""}`;
+  });
+  const fellBack = trace.providers.filter((p) => !p.ok).length;
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="font-dot text-[52px] font-bold leading-none tracking-wide">{word}</p>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl border border-line bg-bg p-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-3">Numbers grounded</p>
+          <p className="mt-1 font-dot text-[26px] font-bold leading-none">
+            {trace.stats.claims - bad}/{trace.stats.claims}
+          </p>
+        </div>
+        <div className="rounded-xl border border-line bg-bg p-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-3">Answered in</p>
+          <p className="mt-1 font-dot text-[26px] font-bold leading-none">{(trace.stats.ms / 1000).toFixed(1)}s</p>
+        </div>
+      </div>
+      <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-3">Because</p>
+      <ul className="flex flex-col gap-1.5 text-[13px] leading-snug text-fg-2">
+        {because.map((b, i) => (
+          <li key={i}>→ {b}</li>
+        ))}
+        {fellBack > 0 && <li>→ {fellBack} model call{fellBack > 1 ? "s" : ""} fell back to the next provider</li>}
+        {bad > 0 && <li className="text-fg">→ {bad} number{bad > 1 ? "s" : ""} not found in any tool result: check them</li>}
+      </ul>
+    </div>
   );
 }

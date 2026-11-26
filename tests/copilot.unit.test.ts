@@ -19,6 +19,10 @@ describe("claim grounding", () => {
     const g = groundClaims("2,337 registrations, 73.0% of goal, CPR ₹73.58", outputs);
     expect(g.every((x) => x.supportedBy.includes("tool:a"))).toBe(true);
   });
+  it("counts numbers inside tool-produced text", () => {
+    const g = groundClaims("cost went from ₹195 to ₹246", [{ nodeId: "tool:d", output: { outcome_summary: "DID NOT WORK: cost per registration ₹195 → ₹246 (+26%)" } }]);
+    expect(g.every((x) => x.supportedBy.includes("tool:d"))).toBe(true);
+  });
   it("flags numbers no tool returned", () => {
     const g = groundClaims("we moved ₹16,800", outputs);
     expect(g[0]!.supportedBy).toEqual([]);

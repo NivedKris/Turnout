@@ -32,7 +32,7 @@ export type ToolName =
 const ROUTES: { re: RegExp; tools: ToolName[] }[] = [
   { re: /\bbets?\b|strateg|initiative|experiment|idea|double down|deprioriti|rice|hypothes|signal|leading indicator|early warning/i, tools: ["list_bets", "get_bet"] },
   { re: /plan\b|goal model|how high|aim|audience|segment|potential|bottom.?up|capacity|base case|stretch case/i, tools: ["get_goal_model"] },
-  { re: /decision|decided|did .* work|outcome|result of|after we/i, tools: ["list_decisions", "propose_decision"] },
+  { re: /decision|decided|did .* work|work(ed)?\?|outcome|result of|after we/i, tools: ["list_decisions", "get_bet", "propose_decision"] },
   { re: /what (changed|moved)|driv|this week|last week|week over week|why did/i, tools: ["get_weekly_drivers"] },
   { re: /owner|team|workload|who (owns|is responsible)|busy|overloaded/i, tools: ["get_team"] },
   { re: /on track|track|target|goal|projection|project|forecast|expect|stretch|base case|reach the|hit the|how many .*(attend|visit)|status/i, tools: ["get_overview"] },

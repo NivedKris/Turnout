@@ -187,3 +187,9 @@ body {
     opacity: 0.9;
   }
 }
+
+/* Trace canvas: soft dot grid like a blueprint. */
+.tn-trace {
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--text) 9%, transparent) 0.8px, transparent 1.1px);
+  background-size: 12px 12px;
+}
