@@ -2,7 +2,7 @@
 
 **One place to measure, diagnose, decide and manage attendee growth, with an AI analyst whose every number traces back to the data.**
 
-RISA Growth APM assignment, Part 2 · **Challenge A: Attendee Growth** · city: **Bengaluru**
+RISA Growth APM assignment, Part 2 · **Challenge A: Attendee Growth** · city: **Bengaluru** · by **G L Lohith**
 
 | | |
 |---|---|
