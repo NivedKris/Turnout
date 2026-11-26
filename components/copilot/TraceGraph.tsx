@@ -58,13 +58,54 @@ const TraceNodeView = memo(function TraceNodeView({ data }: NodeProps<Node<NData
 
 const nodeTypes = { trace: TraceNodeView };
 
+/**
+ * Collapsing: when a group is hidden, its nodes are replaced by ONE summary node
+ * hanging off the answer, so the graph stays readable and the group stays discoverable.
+ */
+export const SUMMARY_ASM = "sum:assumptions";
+export const SUMMARY_CLM = "sum:claims";
+
+function collapse(trace: Trace, opts: { assumptions: boolean; claims: boolean }) {
+  const asm = trace.nodes.filter((n) => n.kind === "assumption");
+  const clm = trace.nodes.filter((n) => n.kind === "claim");
+  const nodes = trace.nodes.filter((n) => (opts.assumptions || n.kind !== "assumption") && (opts.claims || n.kind !== "claim"));
+  const edges = [...trace.edges];
+  const anchor = trace.nodes.find((n) => n.id === "answer")?.id ?? trace.nodes.find((n) => n.kind === "engine")?.id ?? "q";
+  if (!opts.assumptions && asm.length) {
+    const by = (l: string) => asm.filter((a) => a.sub === l).length;
+    nodes.push({
+      id: SUMMARY_ASM,
+      kind: "assumption",
+      label: `${asm.length} assumptions & rules`,
+      sub: `${by("Sourced")} sourced · ${by("Assumption")} assumed · ${by("Dataset rule")} dataset rules · click to expand`,
+      status: "ok",
+      t: Math.max(...asm.map((a) => a.t)),
+      detail: { items: asm.map((a) => `${a.sub}: ${(a.detail?.text as string) ?? a.label}`) },
+    });
+    edges.push({ id: `${anchor}>${SUMMARY_ASM}`, from: anchor, to: SUMMARY_ASM, rel: "assumes" });
+  }
+  if (!opts.claims && clm.length) {
+    const bad = clm.filter((c) => c.status === "unsupported").length;
+    nodes.push({
+      id: SUMMARY_CLM,
+      kind: "claim",
+      label: `${clm.length} numbers in the answer`,
+      sub: `${clm.length - bad} grounded${bad ? ` · ${bad} UNSUPPORTED` : ""} · click to expand`,
+      status: bad ? "unsupported" : "ok",
+      t: Math.max(...clm.map((c) => c.t)),
+      detail: { items: clm.map((c) => `${c.status === "unsupported" ? "✕" : "✓"} ${c.label}: ${c.sub}`) },
+    });
+    edges.push({ id: `${anchor}>${SUMMARY_CLM}`, from: anchor, to: SUMMARY_CLM, rel: "supports" });
+  }
+  return { nodes, edges };
+}
+
 function layout(trace: Trace, opts: { assumptions: boolean; claims: boolean }) {
-  const keep = (n: TraceNode) => (opts.assumptions || n.kind !== "assumption") && (opts.claims || n.kind !== "claim");
-  const nodes = trace.nodes.filter(keep);
+  const { nodes, edges: all } = collapse(trace, opts);
   const ids = new Set(nodes.map((n) => n.id));
-  const edges = trace.edges.filter((e) => ids.has(e.from) && ids.has(e.to));
+  const edges = all.filter((e) => ids.has(e.from) && ids.has(e.to));
   const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: "LR", nodesep: 10, ranksep: 46, marginx: 10, marginy: 10 });
+  g.setGraph({ rankdir: "LR", nodesep: 14, ranksep: 56, marginx: 12, marginy: 12 });
   g.setDefaultEdgeLabel(() => ({}));
   for (const n of nodes) g.setNode(n.id, { width: W[n.kind], height: n.sub ? 50 : 38 });
   for (const e of edges) g.setEdge(e.from, e.to);
@@ -94,8 +135,8 @@ function TraceGraphInner({
   trace,
   selected,
   onSelect,
-  showAssumptions = true,
-  showClaims = true,
+  showAssumptions = false,
+  showClaims = false,
   height = 420,
 }: {
   trace: Trace;
@@ -171,8 +212,9 @@ export function TraceStats({ trace }: { trace: Trace }) {
   );
 }
 
-export function Inspector({ trace, id }: { trace: Trace; id: string | null }) {
-  const n = trace.nodes.find((x) => x.id === id) ?? trace.nodes.find((x) => x.id === "answer") ?? trace.nodes[0];
+export function Inspector({ trace, id, opts = { assumptions: false, claims: false } }: { trace: Trace; id: string | null; opts?: { assumptions: boolean; claims: boolean } }) {
+  const view = collapse(trace, opts);
+  const n = view.nodes.find((x) => x.id === id) ?? trace.nodes.find((x) => x.id === "answer") ?? trace.nodes[0];
   if (!n) return null;
   const inc = trace.edges.filter((e) => e.to === n.id).map((e) => `${e.rel} ← ${trace.nodes.find((x) => x.id === e.from)?.label ?? e.from}`);
   const out = trace.edges.filter((e) => e.from === n.id).map((e) => `${e.rel} → ${trace.nodes.find((x) => x.id === e.to)?.label ?? e.to}`);
@@ -206,7 +248,14 @@ export function Inspector({ trace, id }: { trace: Trace; id: string | null }) {
           ))}
         </div>
       )}
-      {n.detail && (
+      {Array.isArray(n.detail?.items) && (
+        <ul className="flex flex-col gap-1 border border-line bg-surface p-2 text-[11px] leading-snug text-fg-2">
+          {(n.detail!.items as string[]).map((it, i) => (
+            <li key={i}>{it}</li>
+          ))}
+        </ul>
+      )}
+      {n.detail && !Array.isArray(n.detail.items) && (
         <pre className="whitespace-pre-wrap break-all border border-line bg-surface p-2 text-[10px] leading-snug text-fg-2">{JSON.stringify(n.detail, null, 1).slice(0, 6000)}</pre>
       )}
     </div>

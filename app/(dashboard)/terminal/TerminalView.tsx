@@ -3,15 +3,15 @@
 import { useMemo, useState } from "react";
 import { ChatPane } from "@/components/copilot/ChatPane";
 import { traceOf, useCopilot } from "@/components/copilot/CopilotProvider";
-import { Inspector, TraceGraph, TraceStats } from "@/components/copilot/TraceGraph";
+import { Inspector, SUMMARY_ASM, SUMMARY_CLM, TraceGraph, TraceStats } from "@/components/copilot/TraceGraph";
 import type { Trace } from "@/lib/copilot/trace-types";
 
 /** Bloomberg-style copilot terminal: chat | live execution graph | inspector + exec log. */
 export function TerminalView() {
   const { messages, selectedTrace, setSelectedTrace, status } = useCopilot();
   const [node, setNode] = useState<string | null>(null);
-  const [asm, setAsm] = useState(true);
-  const [claims, setClaims] = useState(true);
+  const [asm, setAsm] = useState(false);
+  const [claims, setClaims] = useState(false);
   const traces = useMemo(
     () =>
       messages
@@ -28,12 +28,17 @@ export function TerminalView() {
         <span className="uppercase tracking-[0.18em]">Copilot terminal · agent execution</span>
         {trace && <TraceStats trace={trace} />}
         <span className="ml-auto flex items-center gap-2">
-          <label className="flex items-center gap-1 text-fg-2">
-            <input type="checkbox" checked={asm} onChange={(e) => setAsm(e.target.checked)} /> ASSUMPTIONS
-          </label>
-          <label className="flex items-center gap-1 text-fg-2">
-            <input type="checkbox" checked={claims} onChange={(e) => setClaims(e.target.checked)} /> CLAIMS
-          </label>
+          {trace && (
+            <>
+              <LayerToggle on={asm} onClick={() => setAsm((x) => !x)} label="Assumptions & rules" count={`${trace.nodes.filter((n) => n.kind === "assumption").length}`} />
+              <LayerToggle
+                on={claims}
+                onClick={() => setClaims((x) => !x)}
+                label="Answer numbers"
+                count={`${trace.stats.claims - trace.stats.unsupported_claims}/${trace.stats.claims} grounded`}
+              />
+            </>
+          )}
           {traces.length > 1 && (
             <select
               aria-label="Select turn"
@@ -66,7 +71,19 @@ export function TerminalView() {
           </header>
           <div className="min-h-0 flex-1 p-1">
             {trace ? (
-              <TraceGraph trace={trace} selected={node} onSelect={setNode} showAssumptions={asm} showClaims={claims} height="100%" />
+              <TraceGraph
+                trace={trace}
+                selected={node}
+                onSelect={(id) => {
+                  // Clicking a collapsed summary expands that layer.
+                  if (id === SUMMARY_ASM) setAsm(true);
+                  else if (id === SUMMARY_CLM) setClaims(true);
+                  setNode(id);
+                }}
+                showAssumptions={asm}
+                showClaims={claims}
+                height="100%"
+              />
             ) : (
               <div className="flex h-full items-center justify-center p-6 text-center font-mono text-[11px] text-fg-3">
                 Ask something. The agent&apos;s execution appears here live: every model call (and fallback), tool, engine function, data source, rule and assumption, and whether each number in the answer is grounded.
@@ -78,7 +95,7 @@ export function TerminalView() {
         <section className="flex min-h-0 flex-col gap-2" aria-label="Inspector">
           <div className="flex min-h-0 flex-1 flex-col border border-line bg-surface">
             <header className="border-b border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-3">03 · Inspector</header>
-            <div className="min-h-0 flex-1 p-3">{trace ? <Inspector trace={trace} id={node} /> : null}</div>
+            <div className="min-h-0 flex-1 p-3">{trace ? <Inspector trace={trace} id={node} opts={{ assumptions: asm, claims }} /> : null}</div>
           </div>
           <div className="flex max-h-[38%] min-h-0 flex-col border border-line bg-bg">
             <header className="border-b border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-3">04 · Exec log</header>
@@ -107,5 +124,22 @@ export function TerminalView() {
         </section>
       </div>
     </div>
+  );
+}
+
+/** Large, obvious layer switch with a count, so people know the layer exists and how big it is. */
+function LayerToggle({ on, onClick, label, count }: { on: boolean; onClick: () => void; label: string; count: string }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={on}
+      className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-[13px] font-medium transition-colors ${on ? "border-fg bg-fg text-bg" : "border-line text-fg-2 hover:border-fg-2 hover:text-fg"}`}
+    >
+      <span className={`flex h-4 w-7 items-center rounded-full p-0.5 ${on ? "bg-bg/30" : "bg-fg/15"}`} aria-hidden>
+        <span className={`h-3 w-3 rounded-full transition-transform ${on ? "translate-x-3 bg-bg" : "bg-fg-2"}`} />
+      </span>
+      {on ? "Hide" : "Show"} {label}
+      <span className={`font-mono text-[11px] ${on ? "opacity-70" : "text-fg-3"}`}>{count}</span>
+    </button>
   );
 }
