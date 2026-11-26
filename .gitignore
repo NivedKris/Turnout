@@ -43,3 +43,14 @@ next-env.d.ts
 
 # local
 *.local
+
+# LaTeX build files (paper/build.sh writes README.pdf at the root)
+paper/*.aux
+paper/*.log
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.bbl
+paper/*.blg
+paper/*.out
+paper/*.toc
+paper/turnout.pdf
