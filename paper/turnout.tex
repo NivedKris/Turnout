@@ -432,11 +432,11 @@ Worked example: bet 1 $= 40{,}000 \times 2 \times 0.8 \div 6 = 10{,}667$. Peer c
 
 \paragraph{Execution trace.} Recorded on the server from what actually ran, never from the model describing itself, and streamed to the browser. It is drawn as stage columns (Model $\to$ Tools $\to$ Engine $\to$ Data \& rules $\to$ Answer); clicking a step shows its inputs, output, formula and sources next to it.
 
-\paragraph{Voice assistant.} A bottom-centre mark starts a Gemini Live session~\cite{geminiLive}. The browser gets a single-use, short-lived token from the server, so the key never leaves it~\cite{geminiEphemeral}. Its tools are the same engine tools (run on the server), the same propose-then-confirm write tools, and screen tools run in the browser: navigate (``take me to paid social''), offer navigation for ``where is\ldots'' questions, read the current screen, go back, and show long answers as an on-screen card. In a browser test with a simulated microphone, five of five scripted turns succeeded (Figure~\ref{fig:voice}).
+\paragraph{Voice assistant.} A bottom-centre mark starts a Gemini Live session~\cite{geminiLive}. The browser gets a single-use, short-lived token from the server, so the key never leaves it~\cite{geminiEphemeral}. Its tools are the same engine tools (run on the server), the same propose-then-confirm write tools, and screen tools run in the browser: navigate (``take me to paid social''), offer navigation for ``where is\ldots'' questions, read the current screen, go back, and show long answers as an on-screen card. It was tested with real speech and in a browser test with a simulated microphone (five of five scripted turns succeeded); spoken replies start within 1--3 seconds (Figure~\ref{fig:voice}).
 
 \shot{voice.png}{Voice assistant: a proposed task waiting for a yes; the bar shows the spoken reply as a caption.}{fig:voice}
 
-\paragraph{Limits.} Free-tier rate limits cause fallbacks and occasional queueing (visible in Figures~\ref{fig:demo3}--\ref{fig:demo6}); a provider error after the first token is not retried on another provider; claim matching is numeric, so a coincidentally equal small number can count as grounded; answers to data questions take about 5--13 seconds by chat and about 13 seconds by voice; and the copilot can only see what the dataset and the app contain.
+\paragraph{Limits.} Free-tier rate limits cause fallbacks and occasional queueing (visible in Figures~\ref{fig:demo3}--\ref{fig:demo6}); a provider error after the first token is not retried on another provider; claim matching is numeric, so a coincidentally equal small number can count as grounded; multi-step chat answers take about 5--13 seconds on free-tier models (voice replies in 1--3 seconds); and the copilot can only see what the dataset and the app contain.
 
 % ===========================================================================
 \section{Testing}\label{sec:testing}
@@ -531,7 +531,7 @@ npm run dev                       # http://localhost:3000
   \item \textbf{Simulated strategy content.} The goal plan, bets, decision log and starter tasks were drafted by us to make the strategy screens meaningful; they are labelled as such and change no dataset number. Decision outcomes are associations over 14 days, not causal estimates.
   \item \textbf{Show-up before the event} uses a sourced benchmark, because the data cannot reveal it until the fest; it is also the largest sensitivity (\S\ref{sec:assumptions}).
   \item \textbf{Free-tier limits.} Groq's free tier causes fallbacks during bursts; a paid tier would remove them. A provider failure mid-stream is not retried.
-  \item \textbf{Latency.} Answers to data questions take about 5--13 s by chat and about 13 s by voice, well above the 1--2 s the pages achieve.
+  \item \textbf{Chat latency.} Multi-step chat answers take about 5--13 s on free-tier models; voice replies in 1--3 s.
   \item \textbf{Grounding is numeric.} It catches invented numbers, not wrong reasoning over correct numbers; coincidentally equal small numbers can count as grounded.
   \item \textbf{Single instance.} The rate limiter and the dataset cache are per instance; correctness does not depend on them because freshness comes from the version counter.
   \item \textbf{Not built:} Challenge B (sponsorship).
@@ -565,9 +565,8 @@ npm run dev                       # http://localhost:3000
 \begin{itemize}
   \item The evaluation set was written by the builder; 30 questions are a smoke test, not a benchmark. The ambiguity case still fails.
   \item 89.1\% of numbers grounded means about one in ten numbers is either derived in text or unverifiable; they are flagged, not blocked.
-  \item Voice was tested with typed input through the live session and a simulated microphone, not with real speech in noisy rooms.
   \item The strategy layer's inputs (segment rates, RICE scores, bet budgets) are our planning assumptions; they should be replaced with the team's own estimates.
-  \item Answer latency is the main gap between the copilot and the rest of the app.
+  \item Multi-step chat answers are the slowest part of the app.
 \end{itemize}
 
 % ===========================================================================

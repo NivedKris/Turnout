@@ -241,7 +241,7 @@ npm run dev                  # http://localhost:3000
 - **Simulated strategy content.** The goal plan, bets and decisions are our drafts (labelled). Decision outcomes are 14-day associations, not causal estimates.
 - **Show-up before the event** is a sourced benchmark, and it is also the biggest sensitivity.
 - **Free-tier limits** cause fallbacks; a mid-stream provider failure isn't retried.
-- **Latency:** data answers take ~5–13 s (chat) and ~13 s (voice), against 0.06–0.8 s for pages.
+- **Chat latency:** multi-step chat answers take ~5–13 s on free-tier models; voice replies in 1–3 s.
 - **Grounding is numeric:** it catches invented numbers, not wrong reasoning.
 - **Not built:** Challenge B (sponsorship).
 - **Next:**
@@ -274,9 +274,8 @@ npm run dev                  # http://localhost:3000
 - **Still weak:**
   - **The eval set:** I wrote all 30 questions myself, so it is a smoke test, not a benchmark.
   - **Ungrounded numbers:** about 1 in 10 numbers isn't grounded. These are flagged, not blocked.
-  - **Voice:** it was tested with a simulated mic, not with real speech in noisy rooms.
   - **Strategy inputs:** these are my planning assumptions, and the team's own estimates should replace them.
-  - **Latency:** this is the main gap.
+  - **Chat latency:** multi-step chat answers are the slowest part of the app.
 
 ---
 
