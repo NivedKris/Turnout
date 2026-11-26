@@ -9,6 +9,7 @@ import { dayLabel, inr, num, pct } from "@/lib/format";
 import { overviewView, type OverviewView } from "@/lib/server/views";
 import { statusGlyph } from "@/lib/ui/status";
 import { Countdown } from "./_c/Countdown";
+import { InsightTask } from "./_c/InsightTask";
 
 export default function OverviewPage({ searchParams }: PageProps<"/">) {
   return (
@@ -59,17 +60,26 @@ async function Overview({ searchParams }: { searchParams: PageProps<"/">["search
             ) : (
               <ul className="flex flex-col divide-y divide-line">
                 {v.attention.map((a) => (
-                  <li key={a.id} className="flex items-start gap-3 py-2">
+                  <li key={a.id} className="flex flex-wrap items-start gap-3 py-2">
                     <GlyphIcon glyph={statusGlyph(a.status).glyph} size={12} className="mt-0.5 text-fg" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{a.title}</p>
                       <p className="font-mono text-[11px] text-fg-3">{a.detail}</p>
                     </div>
-                    {a.campaignId && (
-                      <Link href={href(`/campaigns/${a.campaignId}`)} className="shrink-0 font-mono text-[10px] tracking-wider text-fg-2 hover:text-fg">
-                        CMP →
-                      </Link>
-                    )}
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                      {a.campaignId && (
+                        <Link href={href(`/campaigns/${a.campaignId}`)} className="font-mono text-[10px] tracking-wider text-fg-2 hover:text-fg">
+                          CMP →
+                        </Link>
+                      )}
+                      <InsightTask
+                        title={a.kind === "rule" ? `Act on ${a.title.toLowerCase()}` : `Fix: ${a.title}`}
+                        insight={`${a.title}. ${a.detail} (as of ${v.meta.asOf})`}
+                        campaignId={a.campaignId}
+                        owner={v.campaigns.find((c) => c.id === a.campaignId)?.owner}
+                        ctx={{ owners: v.owners, campaigns: v.campaigns, meta: v.meta }}
+                      />
+                    </div>
                   </li>
                 ))}
               </ul>

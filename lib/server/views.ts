@@ -10,6 +10,7 @@ import {
   funnel,
   projection,
   ratio,
+  reallocation,
   registeredVisitors,
   series,
   statusCounts,
@@ -261,6 +262,8 @@ export async function overviewView(asOfInput?: string) {
     portfolioCpr: rules.value.portfolio_cpr,
     attention,
     quality: s.quality,
+    owners: [...new Set([...ds.campaigns.map((c) => c.owner_name), ...(ds.tasks ?? []).map((t) => t.owner_name)])].sort(),
+    campaigns: ds.campaigns.map((c) => ({ id: c.campaign_id, name: c.campaign_name, owner: c.owner_name })),
   };
 }
 export type OverviewView = Awaited<ReturnType<typeof overviewView>>;
@@ -538,3 +541,28 @@ export async function settingsView(asOfInput?: string) {
     quality: s.quality,
   };
 }
+
+/* ───────────────────────── Planner ───────────────────────── */
+
+export async function plannerView(asOfInput?: string) {
+  await connection();
+  const ds = await loadDataset();
+  const s = buildSnapshot(ds, asOfInput);
+  const realloc = reallocation(s);
+  const rules = evaluateRules(s);
+  const base = projection(s);
+  const rates = campaignRates(s);
+  return {
+    meta: metaOf(s, ds),
+    reallocation: realloc.value,
+    reallocationFormula: realloc.formula,
+    reallocationAssumptions: realloc.assumptions,
+    rules: rules.value.evaluations,
+    portfolioCpr: rules.value.portfolio_cpr,
+    base: base.value,
+    rates,
+    campaigns: ds.campaigns.map((c) => ({ id: c.campaign_id, name: c.campaign_name, owner: c.owner_name })),
+    owners: [...new Set([...ds.campaigns.map((c) => c.owner_name), ...(ds.tasks ?? []).map((t) => t.owner_name)])].sort(),
+  };
+}
+export type PlannerView = Awaited<ReturnType<typeof plannerView>>;
