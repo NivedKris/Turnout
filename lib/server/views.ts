@@ -82,8 +82,11 @@ function metaOf(s: Snapshot, ds: Dataset): Meta {
  * Memoises a view model by data version + arguments. Any write bumps the version,
  * so cached views can never be stale; repeat visits and parallel cards are instant.
  */
-const g = globalThis as typeof globalThis & { __turnoutViews?: Map<string, Promise<unknown>> };
-const VIEWS = (g.__turnoutViews ??= new Map());
+const g = globalThis as typeof globalThis & { __turnoutViews?: { epoch: string; map: Map<string, Promise<unknown>> } };
+// A new epoch each time this module is (re)loaded: dev hot reloads never serve views built by old code.
+const EPOCH = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+if (!g.__turnoutViews || g.__turnoutViews.epoch !== EPOCH) g.__turnoutViews = { epoch: EPOCH, map: new Map() };
+const VIEWS = g.__turnoutViews.map;
 const MAX_VIEWS = 120;
 
 function cachedView<A extends unknown[], R>(name: string, raw: (...args: A) => Promise<R>): (...args: A) => Promise<R> {
