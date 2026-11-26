@@ -200,10 +200,10 @@ All analytics endpoints take `?asOf=YYYY-MM-DD`.
 |---|---|
 | `npm test` | **50 Vitest tests**: hand-built fixture edge cases (zero denominators, empty campaign, before history, look-ahead, cancel → reconfirm, duplicates, capacity cap, scenario arithmetic), golden tests on the real workbook, claim extraction and grounding, tool routing |
 | `npm run verify-seed` | Headline numbers computed straight from MongoDB |
-| `npm run eval` | The **copilot eval**: 31 cases across lookup, calculation, comparison, diagnosis, recommendation, follow-up, action, unanswerable, ambiguous, data quality and *after a data change*. Expected values are computed by the engine at run time. Results: [docs/eval-results.md](docs/eval-results.md) |
+| `npm run eval` | The **copilot eval**: 30 cases across lookup, calculation, comparison, diagnosis, recommendation, follow-up, action, unanswerable, ambiguous, data quality and *after a data change*. Expected values are computed by the engine at run time. Results: [docs/eval-results.md](docs/eval-results.md) |
 | `node scripts/shot.mjs` / `scripts/shot-copilot.mjs` | Real-browser screenshots, including driving the copilot terminal |
 
-**Eval result:** _EVAL_RESULT_
+**Eval result (latest run):** **29/30 passed (96.7%)**. 172 of 193 numeric claims (89.1%) were grounded in tool output. The first run scored 23/30; its failures led to four fixes, listed in the git history. The remaining miss is ambiguity handling ("the partners campaign"), which has since been tightened in the prompt and the tool.
 
 ## 11. Known limitations and next steps
 

@@ -253,7 +253,12 @@ export function buildTools(ctx: ToolContext) {
       inputSchema: z.object({ campaign: z.string(), as_of: asOfArg }),
       execute: traced("get_campaign", ({ campaign, as_of }: { campaign: string; as_of?: string }, id) => {
         const m = resolveCampaign(ctx.ds, campaign);
-        if (!m.match) return { error: `Ambiguous or unknown campaign "${campaign}". Ask the user which one.`, candidates: m.candidates };
+        if (!m.match)
+          return {
+            ambiguous: true,
+            instruction: `"${campaign}" matches more than one campaign. Do NOT pick one. Reply by listing these candidates by name and ask the user which they mean.`,
+            candidates: m.candidates,
+          };
         const s = snap(as_of);
         const c = m.match;
         const k = campaignKpis(s);
