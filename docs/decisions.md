@@ -4,7 +4,7 @@
 |---|---|---|---|
 | 1 | Track | **A: Attendee Growth** | 2026-11-26 |
 | 2 | City | **Bengaluru (recommended, pending confirmation).** Densest college base in India, see `research.md` §2b | 2026-11-26 |
-| 3 | Dataset | **Pending.** Location of the RISA dataset not yet provided | — |
+| 3 | Dataset | `data/original/Attendee Dataset.xlsx` (from Google Drive), profiled in `docs/dataset.md` | 2026-11-26 |
 | 4 | LLM | **Google Gemini** (`gemini-3.8-flash`), behind `lib/copilot/provider.ts`; Anthropic kept as a fallback | 2026-11-26 |
 | 5 | MongoDB | Existing Atlas cluster. `MONGODB_URI` is in local `.env` | 2026-11-26 |
 | 6 | Deploy | Push to GitHub, then import and deploy through the **Vercel dashboard** (no Vercel CLI) | 2026-11-26 |
