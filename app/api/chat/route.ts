@@ -111,8 +111,21 @@ export async function POST(req: Request) {
       // Ground every number in the final answer against what tools returned.
       const text = await result.text;
       const outputs = rec.trace.nodes.filter((n) => n.kind === "tool" && n.detail?.output).map((n) => ({ nodeId: n.id, output: n.detail!.output }));
+      // Numbers may also come from tool results earlier in this conversation (follow-ups like "create a task for that").
+      const prior: { nodeId: string; output: unknown; name: string }[] = [];
+      for (const m of messages.slice(0, -1)) {
+        if (m.role !== "assistant") continue;
+        for (const p of m.parts as { type: string; toolCallId?: string; state?: string; output?: unknown }[]) {
+          if (p.type.startsWith("tool-") && p.state === "output-available" && p.toolCallId) prior.push({ nodeId: `prior:${p.toolCallId}`, output: p.output, name: p.type.slice(5) });
+        }
+      }
       const qNums = [...question.matchAll(/\d[\d,]*(?:\.\d+)?/g)].map((m) => Number(m[0].replace(/,/g, "")));
-      const claims = groundClaims(text, outputs, qNums);
+      const claims = groundClaims(text, [...outputs, ...prior], qNums);
+      for (const pr of prior) {
+        if (!claims.some((c) => c.supportedBy.includes(pr.nodeId))) continue;
+        rec.add({ id: pr.nodeId, kind: "tool", label: `${pr.name} (earlier turn)`, sub: "result reused from conversation", status: "ok", detail: { output: pr.output as Record<string, unknown> } });
+        rec.link("q", pr.nodeId, "reads");
+      }
       const answerId = rec.add({ id: "answer", kind: "answer", label: "Answer", sub: `${claims.length} numeric claims`, status: "ok", detail: { text: text.slice(0, 1500) } });
       if (rec.currentLlm) rec.link(rec.currentLlm, answerId, "answers");
       claims.forEach((c, i) => {
