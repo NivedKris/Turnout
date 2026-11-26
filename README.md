@@ -17,8 +17,14 @@
    - campaign overlays, a readout, the formula and inputs, the sources read, and the assumptions;
    - a by-campaign breakdown.
 3. **Time machine:** the as-of slider in the top bar replays any day from 15 Jan to 20 Apr 2025. Every view and the copilot compute "as of the end of that IST day".
-4. **Command line:** type `REG <GO>`, `FUNL`, `CMP` or `RALC`, or ask a free-text question (⌘K).
-5. **Copilot (⌘J) and the TERM terminal:** ask *"Are we on track?"*. The terminal shows the agent's execution graph building live:
+4. **Strategy loop (the three slides, live):**
+   - **Goal plan:** *How high can we aim?* A bottom-up model of Bengaluru audience segments × reach × identify × register × confirm × show-up, capped by capacity. It gives base and stretch, plus a **plan vs data** comparison for each step. Every input is editable and labelled Sourced or Assumption.
+   - **Bets:** five ranked strategies (RICE). Each has a hypothesis, budget, expected visitors, linked campaigns and **early signals** with scale and stop lines, judged live as *scale, watch, stop, too early* or *from event day*.
+   - **Decisions:** every scale, change or stop call is logged with the evidence at the time. Its **outcome** is measured over the following 14 days, and some come out "worse", honestly.
+   - **This week:** the drivers behind each week-on-week change, labelled as association, not cause.
+   - **Team:** each owner's campaigns, bets and overdue work.
+5. **Command line:** type `REG <GO>`, `FUNL`, `CMP` or `RALC`, or ask a free-text question (⌘K).
+6. **Copilot (⌘J) and the TERM terminal:** ask *"Are we on track?"*. The terminal shows the agent's execution graph building live:
    - each model call (and any fallback between providers);
    - each tool call, analytics function, data source, rule and assumption;
    - every number in the answer, marked grounded or **UNSUPPORTED**.
@@ -143,7 +149,8 @@ See [docs/research.md](docs/research.md). Every number there is labelled *Source
 
 ## 8. Copilot design
 
-- **Grounding through tools, not context stuffing.** The model gets a short header (as-of date, phase, target, campaign list) and **17 tools** that call the engine:
+- **Grounding through tools, not context stuffing.** The model gets a short header (as-of date, phase, target, campaign list) and **24 tools** that call the engine:
+  - strategy: `get_goal_model`, `list_bets`, `get_bet`, `get_weekly_drivers`, `list_decisions` (each outcome comes as a plain sentence saying whether the decision worked), `get_team`, and `propose_decision`, which drafts a decision for confirmation;
   - `get_overview`, `get_funnel`, `get_bottleneck`, `get_trends`, `get_daily_series`;
   - `list_campaigns`, `get_campaign` (fuzzy matching, with candidates when a name is ambiguous), `compare_campaigns`;
   - `get_rule_evaluations`, `suggest_reallocation`, `run_scenario`;
@@ -156,7 +163,7 @@ See [docs/research.md](docs/research.md). Every number there is labelled *Source
   - A short "retry after N s" from the provider is honoured before falling back.
   - Every attempt, including failures and fallbacks, appears in the trace.
 - **Tool router.** It offers only the tools relevant to the question, which keeps each call under the Groq free tier's roughly 8k tokens per minute. Earlier turns are passed to the model as text only.
-- **Execution trace.** Recorded on the server from what actually ran, never from the model describing itself. It streams as a `data-trace` part and is drawn as a React Flow graph in TERM:
+- **Execution trace.** Recorded on the server from what actually ran, never from the model describing itself. It streams as a `data-trace` part and is drawn in TERM as **stage columns** (Model → Tools → Engine → Data & rules → Answer) joined by curved connectors. Selecting a step lights up its path. A verdict panel (*GROUNDED* or *CHECK*) shows the grounded-number count and a **Because** list, and an audit tape lists every call. Assumptions and answer numbers start collapsed into summary cards with large toggles:
   - question → model steps (provider, key, latency, fallbacks) → tools (arguments, output size, time) → engine functions (formula, inputs) → sources, rules and assumptions → proposals → claims → answer.
 - **Claim grounding.** Every number in the answer is matched against the numbers the tools returned, in this turn or earlier in the conversation. Numbers with no match are flagged **UNSUPPORTED**.
 - **Honest uncertainty.** The system prompt makes `get_data_coverage` mandatory before saying the data can't answer, and requires correlation to be distinguished from causation.
@@ -198,7 +205,7 @@ All analytics endpoints take `?asOf=YYYY-MM-DD`.
 
 | Command | What it checks |
 |---|---|
-| `npm test` | **50 Vitest tests**: hand-built fixture edge cases (zero denominators, empty campaign, before history, look-ahead, cancel → reconfirm, duplicates, capacity cap, scenario arithmetic), golden tests on the real workbook, claim extraction and grounding, tool routing |
+| `npm test` | **60 Vitest tests**: the strategy engine (goal-model arithmetic by hand, bet signals on real data, decision outcomes, weekly drivers, owners), hand-built fixture edge cases (zero denominators, empty campaign, before history, look-ahead, cancel → reconfirm, duplicates, capacity cap, scenario arithmetic), golden tests on the real workbook, claim extraction and grounding, tool routing |
 | `npm run verify-seed` | Headline numbers computed straight from MongoDB |
 | `npm run eval` | The **copilot eval**: 30 cases across lookup, calculation, comparison, diagnosis, recommendation, follow-up, action, unanswerable, ambiguous, data quality and *after a data change*. Expected values are computed by the engine at run time. Results: [docs/eval-results.md](docs/eval-results.md) |
 | `node scripts/shot.mjs` / `scripts/shot-copilot.mjs` | Real-browser screenshots, including driving the copilot terminal |
