@@ -7,7 +7,7 @@ const browser = await chromium.launch({
   args: ["--no-sandbox", "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--autoplay-policy=no-user-gesture-required"],
 });
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, permissions: ["microphone"] });
-await ctx.addInitScript(() => { try { sessionStorage.setItem("tn-intro", "1"); } catch {} });
+await ctx.addInitScript(() => { try { sessionStorage.setItem("tn-intro", "1"); localStorage.setItem("tn-tour", "done"); } catch {} });
 const page = await ctx.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));

@@ -93,6 +93,7 @@ export function AssistantDock() {
           className={`tn-dock pointer-events-auto flex items-center gap-3 rounded-full shadow-lg transition-all duration-300 ${active ? "w-full max-w-[560px] py-1.5 pl-1.5 pr-2" : "py-1.5 pl-1.5 pr-4"}`}
           role="region"
           aria-label="Turnout assistant"
+          data-tour="assistant"
         >
           <button
             onClick={() => void toggle()}

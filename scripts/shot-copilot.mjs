@@ -3,7 +3,7 @@ import { chromium } from "playwright-core";
 const [outDir, base, ...questions] = process.argv.slice(2);
 const browser = await chromium.launch({ executablePath: process.env.CHROME ?? "/usr/bin/google-chrome", args: ["--no-sandbox"] });
 const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
-await ctx.addInitScript(() => { try { sessionStorage.setItem("tn-intro", "1"); } catch {} });
+await ctx.addInitScript(() => { try { sessionStorage.setItem("tn-intro", "1"); localStorage.setItem("tn-tour", "done"); } catch {} });
 const page = await ctx.newPage();
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));

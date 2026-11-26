@@ -169,6 +169,10 @@ See [docs/research.md](docs/research.md). Every number there is labelled *Source
 - **Honest uncertainty.** The system prompt makes `get_data_coverage` mandatory before saying the data can't answer, and requires correlation to be distinguished from causation.
 - **Eval:** see §10.
 
+### 8a. Welcome and tour
+
+A new browser session opens on a dot-matrix welcome screen with a terminal header and a function-key strip. Pressing anywhere (or any key) continues to the overview. On a first visit, a 9-step spotlight tour follows. It can be skipped at any step, and **Help** (top right) replays it. First visits are detected with a flag stored in the browser (`localStorage`), not by IP address: students on campus Wi-Fi or mobile networks share IPs, IPs change, and storing them would mean keeping personal data. The **Copilot terminal** has a permanent live button in the header, an AI badge in the rail and its own highlighted tour step.
+
 ### 8b. Voice assistant (Gemini Live)
 
 A Turnout mark sits bottom-centre on every screen. **⌘J** (or a tap) starts a voice session; **⌘I** opens the typed copilot.
@@ -221,6 +225,7 @@ All analytics endpoints take `?asOf=YYYY-MM-DD`.
 | `npm run verify-seed` | Headline numbers computed straight from MongoDB |
 | `npm run eval` | The **copilot eval**: 30 cases across lookup, calculation, comparison, diagnosis, recommendation, follow-up, action, unanswerable, ambiguous, data quality and *after a data change*. Expected values are computed by the engine at run time. Results: [docs/eval-results.md](docs/eval-results.md) |
 | `node scripts/shot.mjs` / `scripts/shot-copilot.mjs` | Real-browser screenshots, including driving the copilot terminal |
+| `node scripts/onboarding-e2e.mjs <outDir>` | First visit in a fresh browser: welcome screen → overview → all 9 tour steps, no auto-replay after finishing, Help replays it, Skip closes it |
 | `node scripts/assistant/voice-e2e.mjs <outDir>` | Voice assistant in real Chrome with a fake microphone (dev server): navigate by name, a data question, a proposal and a spoken "no". Latest run: 5/5 |
 | `node --env-file=.env --import tsx scripts/assistant/live-probe.mts` | Gemini Live connection, tool call and spoken answer from Node |
 

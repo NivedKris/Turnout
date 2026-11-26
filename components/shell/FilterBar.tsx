@@ -35,7 +35,7 @@ export function FilterBar({
   const isDefault = !params.get("asOf") && [...params.keys()].length === 0;
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 md:flex-row md:flex-wrap md:items-center" role="region" aria-label="Filters">
+    <div data-tour="asof" className="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 md:flex-row md:flex-wrap md:items-center" role="region" aria-label="Filters">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[13px] font-medium text-fg-2">Viewing as of</span>
         <div className="flex flex-wrap gap-1" role="group" aria-label="Key dates">

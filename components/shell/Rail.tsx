@@ -24,7 +24,11 @@ export function Rail() {
           >
             <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${active ? "bg-fg" : "bg-fg/20 group-hover:bg-fg/50"}`} aria-hidden />
             <span>{n.label}</span>
-            <span className="ml-auto hidden font-mono text-[10px] text-fg-3 lg:inline">{n.code}</span>
+            {n.href === "/terminal" ? (
+              <span className="ml-auto rounded-[3px] bg-fg px-1 py-px font-mono text-[9px] font-bold tracking-wider text-bg">AI</span>
+            ) : (
+              <span className="ml-auto hidden font-mono text-[10px] text-fg-3 lg:inline">{n.code}</span>
+            )}
           </Link>
           </div>
         );

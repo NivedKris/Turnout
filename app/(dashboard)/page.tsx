@@ -41,7 +41,7 @@ async function Overview({ searchParams }: { searchParams: PageProps<"/">["search
       <FilterBar asOf={m.asOf} min={m.historyStart} max={m.historyEnd} presets={m.presets} />
 
       {/* 1 · The three numbers that decide the festival */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div data-tour="kpis" className="grid gap-4 md:grid-cols-3">
         {(["vis", "reg", "spd"] as const).map((k) => {
           const t = tile[k]!;
           return (
@@ -84,7 +84,7 @@ async function Overview({ searchParams }: { searchParams: PageProps<"/">["search
       </Section>
 
       {/* 3 · Decide and diagnose */}
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div data-tour="actions" className="grid gap-4 xl:grid-cols-2">
         <Section title="What to do next" description="Ranked by impact on the visitor goal. Each one can become a task.">
           {v.actions.length === 0 ? (
             <p className="text-[14px] text-fg-3">Nothing needs action at this date.</p>
