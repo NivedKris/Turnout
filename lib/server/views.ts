@@ -4,6 +4,7 @@ import {
   bottleneck,
   buildSnapshot,
   campaignKpis,
+  campaignRates,
   evaluateRules,
   flows,
   funnel,
@@ -389,3 +390,79 @@ export async function kpiView(key: KpiKey, asOfInput?: string) {
   };
 }
 export type KpiView = Awaited<ReturnType<typeof kpiView>>;
+
+/* ───────────────────────── Funnel ───────────────────────── */
+
+export async function funnelView(asOfInput?: string, campaignId?: string | null) {
+  await connection();
+  const ds = await loadDataset();
+  const s = buildSnapshot(ds, asOfInput);
+  const valid = campaignId && s.campaignIds.includes(campaignId) ? campaignId : null;
+  const f = funnel(s, { campaignId: valid });
+  const bn = bottleneck(s);
+  // Conversion matrix: each campaign's stage conversions side by side.
+  const matrix = s.campaigns.map((c) => {
+    const fc = funnel(s, { campaignId: c.campaign_id }).value;
+    return {
+      campaign_id: c.campaign_id,
+      campaign_name: c.campaign_name,
+      stages: [...fc.anonymous.slice(1), ...fc.identified.slice(1)].map((st) => ({ key: st.key, conversion: st.conversion, benchmark: st.benchmark })),
+    };
+  });
+  const stageLabels = [...f.value.anonymous.slice(1), ...f.value.identified.slice(1)].map((st) => ({ key: st.key, label: st.label, benchmark: st.benchmark }));
+  return {
+    meta: metaOf(s, ds),
+    campaignId: valid,
+    campaigns: s.campaigns.map((c) => ({ id: c.campaign_id, name: c.campaign_name })),
+    funnel: f.value,
+    formula: f.formula,
+    assumptions: f.assumptions,
+    sources: f.sources,
+    bottleneck: bn.value,
+    bottleneckFormula: bn.formula,
+    matrix,
+    stageLabels,
+  };
+}
+export type FunnelView = Awaited<ReturnType<typeof funnelView>>;
+
+/* ───────────────────────── Campaigns ───────────────────────── */
+
+export async function campaignsView(asOfInput?: string) {
+  const o = await overviewView(asOfInput);
+  return { meta: o.meta, rows: o.leaderboard, portfolioCpr: o.portfolioCpr };
+}
+
+export async function campaignView(id: string, asOfInput?: string) {
+  await connection();
+  const ds = await loadDataset();
+  const s = buildSnapshot(ds, asOfInput);
+  const c = s.campaigns.find((x) => x.campaign_id === id);
+  if (!c) return null;
+  const k = campaignKpis(s).value.find((x) => x.campaign_id === id)!;
+  const rule = evaluateRules(s).value.evaluations.find((e) => e.campaign_id === id)!;
+  const f = funnel(s, { campaignId: id }).value;
+  const regSeries = series(s, "registrations", { campaignId: id });
+  const spendSeries = series(s, "spend", { campaignId: id });
+  const regTrend = trend(s, "registrations", 7).value.by_campaign.find((x) => x.campaign_id === id) ?? null;
+  const tasks = (ds.tasks ?? []).filter((t) => t.campaign_id === id).map((t) => ({ ...t, created_at: t.created_at.toISOString(), updated_at: t.updated_at.toISOString() }));
+  const rates = campaignRates(s).find((r) => r.campaign_id === id) ?? null;
+  return {
+    meta: metaOf(s, ds),
+    campaign: {
+      ...c,
+      created_at: c.created_at.toISOString(),
+      planned_start_at: c.planned_start_at.toISOString(),
+      planned_end_at: c.planned_end_at.toISOString(),
+    },
+    kpis: k,
+    rule,
+    funnel: f,
+    regSeries,
+    spendSeries,
+    regTrend,
+    rates,
+    tasks,
+  };
+}
+export type CampaignView = NonNullable<Awaited<ReturnType<typeof campaignView>>>;
