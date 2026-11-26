@@ -58,6 +58,99 @@ body {
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ───────────── Signature motion (all disabled by the reduced-motion block above) ───────────── */
+
+/* Logo boot: lit dots switch on in sequence. */
+.tn-boot .tn-lit {
+  opacity: 0;
+  animation: tn-dot-on 260ms steps(2, end) forwards;
+  animation-delay: calc(var(--i) * 55ms);
+}
+@keyframes tn-dot-on {
+  to {
+    opacity: 1;
+  }
+}
+
+/* KPI hover: a single scanline sweeps down the tile. */
+.tn-scan {
+  background: linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--text) 7%, transparent) 50%, transparent 100%);
+  background-size: 100% 40%;
+  background-repeat: no-repeat;
+  animation: tn-scan 1.4s linear infinite;
+  transition: opacity 200ms;
+}
+@keyframes tn-scan {
+  from {
+    background-position: 0 -40%;
+  }
+  to {
+    background-position: 0 140%;
+  }
+}
+
+/* Ticker tape */
+.tn-ticker-track {
+  animation: tn-ticker 45s linear infinite;
+}
+@keyframes tn-ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Intro overlay fade */
+.tn-fade-out {
+  animation: tn-fade 400ms ease-in 1800ms forwards;
+}
+@keyframes tn-fade {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Dot-grid field for page backgrounds, fading at the edges. */
+.tn-dotfield {
+  background-image: radial-gradient(circle at center, color-mix(in srgb, var(--text) 16%, transparent) 0.9px, transparent 1.2px);
+  background-size: 14px 14px;
+  mask-image: radial-gradient(ellipse at 50% 0%, black 10%, transparent 70%);
+}
+
+/* Glass panel for drawers and modals */
+.tn-glass {
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--line);
+}
+
+:focus-visible {
+  outline: 1px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Time-machine slider: a dot rail with a square thumb. */
+.tn-range {
+  appearance: none;
+  height: 12px;
+  background: radial-gradient(circle, var(--text-3) 1px, transparent 1.4px) 0 50% / 6px 6px repeat-x;
+}
+.tn-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 14px;
+  background: var(--text);
+  cursor: ew-resize;
+}
+.tn-range::-moz-range-thumb {
+  width: 10px;
+  height: 14px;
+  border: 0;
+  border-radius: 0;
+  background: var(--text);
 }

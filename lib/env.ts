@@ -8,9 +8,11 @@ import { z } from "zod";
 const schema = z.object({
   MONGODB_URI: z.string().startsWith("mongodb"),
   MONGODB_DB: z.string().default("turnout"),
+  GROQ_API_KEY: z.string().min(1).optional(),
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1).optional(),
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
-  LLM_PROVIDER: z.enum(["google", "anthropic"]).default("google"),
+  /** Comma-separated provider chain, tried in order. */
+  LLM_PROVIDERS: z.string().default("groq,google"),
   LLM_MODEL: z.string().optional(),
   ADMIN_TOKEN: z.string().min(12).optional(),
   APP_PASSCODE: z.string().min(4).optional(),
