@@ -92,6 +92,10 @@ Sensitivity on 31 Mar (base: **1,837 visitors**), from the engine's scenario fun
 | Rule thresholds | scale ≤ 0.8×, stop ≥ 1.5× portfolio CPR | No per-campaign cost targets in the source | Paid Social and Creator Partners stop at any multiple from 1.2× to 1.8× |
 | Extra-spend efficiency | 2× recipient's CPR | Diminishing returns | Conservative: reallocation gains are understated |
 
+**Segment overlap:** "friends of registrants" (20,000) also sit inside the campus segments, so the 8,30,000 total overcounts by at most 2.4%. The app removes this in practice, because people are deduplicated by ID and each one counts once, by registration source.
+
+**Identified → registered:** the plan uses 79.1%, in line with 2025's full campaign (80.0%, measured to 20 Apr). The organisers' revised targets (3,600 identified → 3,200 registrations) imply 88.9%. On 31 Mar the data stood at 70.4%, which is why this is the stage bets 1–2 attack.
+
 ## 4. Calculations
 
 Full worked examples: [README.pdf §5](README.pdf). Every figure is checked against an independent pandas computation (`tests/engine.golden.test.ts`).
@@ -144,6 +148,36 @@ Once campaigns run, evidence replaces estimates: the CPR rules. The two framewor
 - **MoSCoW and Kano:** they don't rank within a category.
 - **Many-criteria scoring:** more knobs than evidence.
 - **Cost per visitor as the daily metric:** it only exists after the event.
+
+**Constraints:**
+- **Dependencies:** referrals (bet 3) need registrants from bets 1–2 first, and retargeting (bet 5) needs their landing traffic.
+- **Overlaps:** clubs and friends sit inside the campus segments, so people are deduplicated by ID and attributed to one source. That way the lifts don't double-count.
+- **Risks:**
+  - ambassador fatigue and uneven quality;
+  - a few big clubs carrying bet 2;
+  - one owner (Meera Iyer) for both top bets, so we'd add a co-owner;
+  - reward abuse on referrals;
+  - creator views that never convert;
+  - weaker show-up from paid traffic.
+
+### How we know what's working
+
+Each bet has its own scale / change / stop lines, stored in the app (Bets page). The app judges them at every checkpoint: day 7, day 14, weekly, the 31 Mar decision point, registration close, the event, and 14 days after.
+
+| Bet · biggest risk | Early signal | ● Scale | ◐ Change | ○ Stop (2nd reading in a row) | 31 Mar reading |
+|---|---|---|---|---|---|
+| 1 Ambassadors · fatigue | CPR 14 d, regs/day 7 d | ≤ ₹50 and ≥ 8/day | ₹50–120 | ≥ ₹120 or ≤ 3/day | ● ₹35, 8.7/day |
+| 2 Club sign-ups · few big clubs | CPR 14 d, confirm rate | ≤ ₹50, confirm ≥ 88% | confirm 78–88% | ≥ ₹120 or confirm ≤ 78% | ◐ ₹49, confirm 85.4% |
+| 3 Referrals · reward abuse | CPR, regs/day, confirm | ≤ ₹45, ≥ 6/day, confirm ≥ 88% | in between | ≥ ₹110, ≤ 2/day or confirm ≤ 78% | ◐ ₹30, 8.7/day, confirm 82.0% |
+| 4 Reels (test) · views don't convert | CPR, confirm | ≤ ₹70, confirm ≥ 88% | ₹70–130 | ≥ ₹130 or confirm ≤ 78% | ○ ₹134, confirm 77.7% |
+| 5 Retargeting (test) · weak show-up | CPR, confirm | ≤ ₹80, confirm ≥ 88% | ₹80–150 | ₹150, or the ₹110 portfolio line, whichever comes first | ○ ₹256 |
+
+- **Lesson from replaying 2025:**
+  - On 7 Mar, bets 1 and 2 crossed their stop lines (₹148 on 87 registrations, and ₹278 on just 17).
+  - By 31 Mar, both were back under the scale line.
+  - Bet 4 read stop at every checkpoint.
+  - So a stop needs **two readings in a row**; one bad fortnight triggers a change instead.
+- **Cause, not just correlation:** holdout colleges (bet 1), a reward A/B test (bet 3) and tracked creator links (bet 4) give comparison groups. The app labels weekly drivers as association, and it measures each logged decision over the 14 days before and after.
 
 ## 6. Product and architecture
 
