@@ -39,7 +39,7 @@ export function FilterBar({
     <div data-tour="asof" className="flex flex-col gap-2.5 rounded-2xl border border-line bg-surface px-4 py-3 md:flex-row md:flex-wrap md:items-center md:gap-3" role="region" aria-label="Filters">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[13px] font-medium text-fg-2">Viewing as of</span>
-        <div className="order-last -mx-4 flex w-[calc(100%+2rem)] gap-1 overflow-x-auto px-4 [scrollbar-width:none] md:order-none md:mx-0 md:w-auto md:flex-wrap md:overflow-visible md:px-0" role="group" aria-label="Key dates">
+        <div className="order-last -mx-4 flex w-[calc(100%+2rem)] gap-1 tn-noscrollbar tn-fade-x overflow-x-auto px-4 md:order-none md:[mask-image:none] md:mx-0 md:w-auto md:flex-wrap md:overflow-visible md:px-0" role="group" aria-label="Key dates">
           {presets.map((p) => {
             const on = p.day === asOf;
             return (

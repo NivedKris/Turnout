@@ -8,7 +8,7 @@ export function Rail() {
   const pathname = usePathname();
   const asOf = useSearchParams().get("asOf");
   return (
-    <nav aria-label="Primary" className="flex flex-row gap-1 overflow-x-auto p-2 md:flex-col md:gap-0.5 md:overflow-visible md:px-0 md:py-4">
+    <nav aria-label="Primary" className="tn-noscrollbar tn-fade-x flex flex-row gap-1 overflow-x-auto p-2 md:flex-col md:gap-0.5 md:overflow-visible md:px-0 md:py-4 md:[mask-image:none]">
       {NAV.map((n, i) => {
         const header = i === 0 || NAV[i - 1]!.group !== n.group;
         const active = n.href === "/" ? pathname === "/" || pathname.startsWith("/kpi") : pathname.startsWith(n.href);

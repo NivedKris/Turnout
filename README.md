@@ -6,8 +6,8 @@ RISA Growth APM assignment, Part 2 · **Challenge A: Attendee Growth** · city: 
 
 | | |
 |---|---|
-| **Live app** | _[Vercel URL: add after deploy]_ |
-| **Passcode** | _[shared in the submission form]_ |
+| **Live app** | https://turnout-bay.vercel.app/ |
+| **Passcode** | turnout2026|
 | **3-slide deck** | [Turnout-slides.pdf](Turnout-slides.pdf) (LaTeX source in `slides/`) |
 | **Full write-up (26 pages, with references)** | [README.pdf](README.pdf) |
 

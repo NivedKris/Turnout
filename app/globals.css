@@ -152,6 +152,29 @@ body {
 /* Off-canvas panels (the chat drawer) must never widen the page on phones. clip, unlike hidden, keeps sticky headers working. */
 html, body { overflow-x: clip; }
 
+/* Scrollbars: thin, dark, rounded, matching the monochrome UI (both themes). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--text) 22%, transparent) transparent;
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-button { display: none; }
+::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text) 22%, transparent);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--text) 40%, transparent); }
+/* Swipe strips (menu, presets): no bar at all; edges fade instead. */
+.tn-noscrollbar { scrollbar-width: none; }
+.tn-noscrollbar::-webkit-scrollbar { display: none; }
+.tn-fade-x {
+  mask-image: linear-gradient(to right, transparent, black 14px, black calc(100% - 28px), transparent);
+}
+
 .tn-glass {
   background: color-mix(in srgb, var(--surface-2) 70%, transparent);
   backdrop-filter: blur(20px);
