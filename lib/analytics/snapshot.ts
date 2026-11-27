@@ -53,6 +53,10 @@ export type Snapshot = {
   /** Deduplicated status versions ≤ cutoff, grouped by registration (for timelines). */
   historyByReg: Map<string, RegistrationHistoryDoc[]>;
   visitors: Map<string, Visitor>;
+  /** The snapshot as of another day, from the same dataset (memoised). Used for weekly stop reviews. */
+  at: (day: string) => Snapshot;
+  /** Opaque identity of the dataset this snapshot came from (cache key). */
+  source: object;
   quality: {
     duplicates: Record<string, number>;
     excludedPeople: Record<string, number>;
@@ -106,6 +110,9 @@ export function clampAsOf(asOf: string | undefined, ds: Dataset): string {
   if (!asOf || !isDayKey(asOf)) return fallback;
   return asOf;
 }
+
+/** Earlier snapshots per dataset object, so confirming a stop costs a few ms at most. */
+const priorCache = new WeakMap<Dataset, Map<string, Snapshot>>();
 
 export function buildSnapshot(ds: Dataset, asOfInput?: string): Snapshot {
   const asOf = clampAsOf(asOfInput, ds);
@@ -191,6 +198,13 @@ export function buildSnapshot(ds: Dataset, asOfInput?: string): Snapshot {
     [...ds.targets].filter((t) => t.effective_at <= cutoff).sort((a, b) => +b.effective_at - +a.effective_at)[0] ??
     null;
 
+  const at = (day: string): Snapshot => {
+    let m = priorCache.get(ds);
+    if (!m) priorCache.set(ds, (m = new Map()));
+    let hit = m.get(day);
+    if (!hit) m.set(day, (hit = buildSnapshot(ds, day)));
+    return hit;
+  };
   return {
     asOf,
     cutoff,
@@ -213,6 +227,8 @@ export function buildSnapshot(ds: Dataset, asOfInput?: string): Snapshot {
     statusByReg,
     statusAtEventStart,
     historyByReg,
+    at,
+    source: ds,
     visitors,
     quality: {
       duplicates: {

@@ -79,3 +79,17 @@ describe("weekly drivers and owners", () => {
     expect(o.bets.map((b) => b.bet_id).sort()).toEqual(["B1", "B2"]);
   });
 });
+
+describe("bet stop rule (3 Monday stop readings in a row, >= 30 registrations, sticky)", () => {
+  it("stops Retargeting and Reels, keeps Referrals and Clubs (2025 replay)", async () => {
+    const { seedBets } = await import("@/lib/seed/strategy");
+    const ev = Object.fromEntries(seedBets().map((b) => [b.bet_id, evaluateBet(b, buildSnapshot(ds, "2025-03-31"))]));
+    expect(ev.B5!.verdict).toBe("stop");
+    expect(ev.B5!.stopped_on).toBe("2025-02-17");
+    expect(ev.B4!.verdict).toBe("stop");
+    expect(ev.B4!.stopped_on).toBe("2025-03-24");
+    expect(ev.B3!.stopped_on).toBeNull();
+    expect(ev.B2!.stopped_on).toBeNull();
+    expect(ev.B1!.verdict).toBe("scale");
+  });
+});

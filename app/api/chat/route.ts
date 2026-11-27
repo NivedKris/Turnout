@@ -108,6 +108,9 @@ export async function POST(req: Request) {
         messages: await convertToModelMessages(modelView),
         tools,
         activeTools: active,
+        // The first step must call a tool, so no answer can skip the data (a fallback model
+        // once answered a recommendation from memory; grounding caught it, this prevents it).
+        prepareStep: ({ stepNumber }) => (stepNumber === 0 ? { toolChoice: "required" } : {}),
         stopWhen: isStepCount(8),
         temperature: 0.1,
         // Re-run a failed step; the provider middleware moves it to the next live model.

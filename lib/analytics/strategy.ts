@@ -1,3 +1,4 @@
+import { STOP_RULE, STOP_RULE_TEXT, stopStatus, type StopCheck } from "./confirm";
 import type { BetDoc, DecisionDoc, GoalModelDoc, Signal, SignalMetric } from "../models/strategy";
 import { addDays, daysBetween } from "../time";
 import { BENCHMARKS, RULES, asAssumption } from "./benchmarks";
@@ -165,6 +166,10 @@ export type BetEvaluation = {
   visitors_basis: "actual" | "projected";
   contribution_vs_plan: number | null;
   campaign_verdicts: { campaign_id: string; verdict: string }[];
+  /** Present when a signal is past its stop line: whether consecutive readings confirm the stop. */
+  stop_check?: StopCheck;
+  /** Day the stop rule first confirmed a stop (sticky), if it has. */
+  stopped_on?: string | null;
 };
 
 export function evaluateBet(b: BetDoc, s: Snapshot): BetEvaluation {
@@ -174,12 +179,25 @@ export function evaluateBet(b: BetDoc, s: Snapshot): BetEvaluation {
   const stops = measurable.filter((x) => x.state === "stop");
   let verdict: BetEvaluation["verdict"];
   let reason: string;
+  const stopped = stopStatus(
+    s,
+    `bet:${b.bet_id}:${JSON.stringify(b.signals)}:${ids.join(",")}`,
+    (x) => {
+      const sig = x === s ? signals : b.signals.map((g) => evaluateSignal(x, ids, g));
+      const cpr = sig.find((g) => g.metric === "cost_per_registration") ?? sig[0];
+      return { stop: sig.some((g) => g.state === "stop"), cost: cpr?.value ?? null, sample: cpr?.sample ?? 0 };
+    },
+    b.start_day > s.event.history_start ? b.start_day : s.event.history_start,
+  );
   if (!measurable.length) {
     verdict = "insufficient";
     reason = "No signal has enough data yet.";
-  } else if (stops.length) {
+  } else if (stopped.confirmed_on) {
     verdict = "stop";
-    reason = `${stops.map((x) => x.label).join(", ")} past the stop line.`;
+    reason = `Stop confirmed ${stopped.confirmed_on === s.asOf ? "now" : `on ${stopped.confirmed_on}`}: the ${STOP_RULE.readings}rd stop reading in a row at the Monday reviews. Its money moves to the bets that are scaling.`;
+  } else if (stops.length) {
+    verdict = "watch";
+    reason = `${stops.map((x) => x.label).join(", ")} past the stop line, but that is stop reading ${stopped.current.count} of ${STOP_RULE.readings} (${STOP_RULE_TEXT}). Hold: release no more money until it recovers, and stop only if the next readings confirm.`;
   } else if (measurable.every((x) => x.state === "scale")) {
     verdict = "scale";
     reason = "Every measurable signal beats its scale line.";
@@ -221,6 +239,8 @@ export function evaluateBet(b: BetDoc, s: Snapshot): BetEvaluation {
     visitors_basis: basis,
     contribution_vs_plan: ratio(visitors, b.expected_visitors),
     campaign_verdicts: ids.map((id) => ({ campaign_id: id, verdict: rules.get(id) ?? "insufficient_data" })),
+    stop_check: stops.length || stopped.confirmed_on ? stopped.current : undefined,
+    stopped_on: stopped.confirmed_on,
   };
 }
 
@@ -229,7 +249,7 @@ export function evaluateBets(bets: BetDoc[], s: Snapshot): Result<BetEvaluation[
   return {
     value,
     formula:
-      "Each signal: metric over its window (ending at min(as-of, registration close)) on the bet's linked campaigns. Scale if it beats the scale line, stop if past the stop line, watch between, insufficient below the minimum sample. Bet verdict: any stop → stop; all measurable scale → scale; else watch. RICE = reach × impact × confidence ÷ effort.",
+      "Each signal: metric over its window (ending at min(as-of, registration close)) on the bet's linked campaigns. Scale if it beats the scale line, stop if past the stop line, watch between, insufficient below the minimum sample. Bet verdict: any stop → stop, but only when " + STOP_RULE_TEXT + " (otherwise watch: release no more money); all measurable scale → scale; else watch. RICE = reach × impact × confidence ÷ effort.",
     inputs: { as_of: s.asOf, bets: bets.length },
     assumptions: [RULES.dedup, RULES.registration_attribution, { text: "Bet thresholds and expected visitors are planning assumptions, editable per bet", label: "Assumption" }, asAssumption(BENCHMARKS.show_up_free)],
     sources: [

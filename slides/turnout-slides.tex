@@ -104,7 +104,7 @@
 \draw[line] (12.0,-15.85) -- (21.9,-15.85);
 \node[anchor=west,inner sep=0] at (12.0,-16.35) {\fs{11}{12}\bfseries Visitors};
 \node[anchor=west,inner sep=0] at (17.45,-16.35) {\fs{11}{12}\ttfamily\bfseries 2,097};
-\blk{12.0}{16.85}{9.9}{\fs{8.4}{10}\color{fg3}2025 actual: identified→registered 80.0\%, show-up 77.0\%\tg{D}. Our 72\% is deliberately conservative.}
+\blk{12.0}{16.85}{9.9}{\fs{8.4}{10}\color{fg3}2025 actual: identified→registered 80.0\%, show-up 77.0\%\tg{D}.}
 
 % ---- levers + risk ---------------------------------------------------------
 \blk{22.47}{9.6}{9.9}{\fs{12.5}{15}\bfseries Base → stretch\\[6pt]
@@ -172,14 +172,14 @@
 \chrome{3}{How will we know what's working?}{Each bet has scale, change and stop lines. The app judges them at every checkpoint, and money moves only on evidence. Right column: the app's reading on 31 Mar, replaying 2025.}
 
 % ---- anchor: threshold table ----------------------------------------------
-\blk{1.5}{4.4}{30.87}{\fs{11.2}{13.4}\renewcommand{\arraystretch}{1.55}
-\begin{tabularx}{30.87cm}{@{}P{5.3cm}P{3.0cm}P{5.9cm}P{3.6cm}LP{4.6cm}@{}}
-\hd{Bet · biggest risk} & \hd{Early signal} & \hd{\gS{} Scale} & \hd{\gW{} Change} & \hd{\gX{} Stop · 3 readings in a row} & \hd{31 Mar (app)} \\\hline
+\blk{1.5}{4.4}{30.87}{\fs{10.6}{12.8}\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{30.87cm}{@{}P{5.6cm}P{2.7cm}P{5.9cm}P{3.9cm}LP{4.5cm}@{}}
+\hd{Bet · biggest risk} & \hd{Early signal} & \hd{\gS{} Scale} & \hd{\gW{} Change} & \hd{\gX{} Stop · 3 Monday readings in a row} & \hd{31 Mar (app)} \\\hline
 \textbf{1 Ambassadors} · fatigue & CPR, regs/day & ≤ ₹50, ≥ 8/day → release reserve & ₹50–120 → swap & ≥ ₹120 → pause & \gS{} \textbf{Scale} · ₹35 \\
 \textbf{2 Clubs} · few big clubs & CPR, confirm & ≤ ₹50, ≥ 88\% → release reserve & 78–88\% → remind & ≥ ₹120 or ≤ 78\% → hold & \gW{} \textbf{Watch} · confirm 85\% \\
 \textbf{3 Referrals} · reward abuse & CPR, confirm & ≤ ₹45, ≥ 88\% → raise reward & in between → A/B & ≥ ₹110 or ≤ 78\% → end & \gW{} \textbf{Watch} · confirm 82\% \\
-\textbf{4 Reels (test)} · no conversion & CPR, confirm & ≤ ₹70 → next ₹20,000 & ₹70–130 → re-brief & ≥ ₹130 → end & \gX{} \textbf{Stopped 28 Feb} (3rd) \\
-\textbf{5 Retargeting (test)} · show-up & CPR, confirm & ≤ ₹80 → next ₹15,000 & ₹80–150 → refresh & ₹150 or ₹110, first hit → end & \gX{} \textbf{Stop} · not topped up \\
+\textbf{4 Reels (test)} · no conversion & CPR, confirm & ≤ ₹70 → next ₹20,000 & ₹70–130 → re-brief & ≥ ₹130 → end & \gX{} \textbf{Stopped 24 Mar} (3rd) \\
+\textbf{5 Retargeting (test)} · show-up & CPR, confirm & ≤ ₹80 → next ₹15,000 & ₹80–150 → refresh & ₹150 or ₹110, first hit → end & \gX{} \textbf{Stopped 17 Feb} (3rd) \\
 \end{tabularx}}
 
 % ---- timeline + lesson -------------------------------------------------------
@@ -191,12 +191,12 @@
   \node[anchor=north,inner sep=0] at (\x,-13.37) {\fs{8.6}{10}\color{fg2}\bot};
 }
 \draw[fg,rounded corners=7pt,line width=0.8pt] (1.5,-14.45) rectangle ++(14.6,-3.25);
-\blk{1.95}{14.75}{13.7}{\lab{Lesson from replaying 2025}\\[4pt]{\fs{10}{12.6}Week by week, a two-in-a-row rule would have killed Clubs and Referrals, and Referrals then became the cheapest bet (₹15–34). \textbf{So a stop needs 3 readings in a row, each on ≥ 30 registrations with cost not improving.} In 2025 that stops only Reels (28 Feb).}}
+\blk{1.95}{14.75}{13.7}{\lab{Lesson from replaying 2025}\\[4pt]{\fs{10}{12.6}Two stop readings in a row would have stopped Referrals on 3 Mar; it became the cheapest bet (₹16 by 7 Apr). \textbf{So a stop needs 3 Monday stop readings in a row, each on ≥ 30 registrations.} In 2025 that stops Retargeting, Creator Partners and Reels.}}
 
 % ---- copilot ----------------------------------------------------------------
 \blk{17.27}{11.55}{15.1}{\fs{12.5}{15}\bfseries The copilot makes the call, a person confirms}
 \node[anchor=north west,inner sep=0] at (17.27,-12.45) {\includegraphics[width=7.8cm]{img/copilot-proposal.png}};
-\blk{25.5}{12.45}{6.87}{\raggedright\fs{9.6}{12}\color{fg2}On 31 Mar it flags \textbf{\color{fg}Paid Social at ₹256}, past both stop lines, and proposes moving \textbf{\color{fg}₹16,800} for +157 registrations and +100 visitors. Asked for a task, it drafts this one.\\[6pt]Nothing changes until someone presses \textbf{\color{fg}Confirm}. 29/30 test questions correct.\\[6pt]\textbf{\color{fg}Dashboard:} Bets shows each signal live; Decisions logs every call.}
+\blk{25.5}{12.45}{6.87}{\raggedright\fs{9.6}{12}\color{fg2}On 31 Mar \textbf{\color{fg}Paid Social at ₹256} is only its \textbf{\color{fg}2nd} stop reading, so the copilot holds new spend rather than pausing it, and moves \textbf{\color{fg}₹16,800} for +131 registrations and +83 visitors.\\[6pt]Nothing changes until someone presses \textbf{\color{fg}Confirm}. 29/30 test questions correct.\\[6pt]\textbf{\color{fg}Dashboard:} Bets shows each signal live; Decisions logs every call.}
 
 \footer{Portfolio rule on every campaign: scale ≤ 0.8×, stop ≥ 1.5× the 14-day portfolio CPR (₹58.86 / ₹110.37 on 31 Mar)\tg{A}. \gS{} scale · \gW{} watch · \gX{} stop.\quad \textbf{Full thresholds, experiment design and copilot grounding: README.pdf §6.1, §8.}}
 \end{scope}

@@ -145,14 +145,37 @@ describe("31 Mar 2025: live decision point", () => {
     const r = evaluateRules(buildSnapshot(ds, asOf)).value;
     expect(r.portfolio_cpr).toBeCloseTo(50475 / 686);
     const v = Object.fromEntries(r.evaluations.map((e) => [e.campaign_id, e]));
-    // C02: 19,200 / 75 = ₹256 ≥ 1.5 × 73.6 → stop. C07: 1,600 / 64 = ₹25 ≤ 0.8 × 73.6 → scale.
+    // C02: 19,200 / 75 = ₹256 ≥ 1.5 × 73.6, but only its 2nd stop reading in a row at the Monday
+    // reviews (24 Mar ₹135, 31 Mar ₹256), so it is "change: hold new spend", not yet a stop.
     expect(v.C02!.value).toBeCloseTo(256);
-    expect(v.C02!.verdict).toBe("stop");
+    expect(v.C02!.verdict).toBe("change");
+    expect(v.C02!.stop_check!.count).toBe(2);
+    // C03 reached 3 stop readings in a row on Monday 3 Mar (17 Feb, 24 Feb, 3 Mar); stops are sticky.
+    expect(v.C03!.verdict).toBe("stop");
+    expect(v.C03!.stopped_on).toBe("2025-03-03");
     expect(v.C07!.verdict).toBe("scale");
     for (const e of r.evaluations) {
       if (e.verdict === "scale") expect(e.value!).toBeLessThanOrEqual(e.thresholds.scale_if);
-      if (e.verdict === "stop") expect(e.value!).toBeGreaterThanOrEqual(e.thresholds.stop_if);
+      if (e.verdict === "stop") expect(e.stopped_on).toBeTruthy();
     }
+    // Without confirmation the single-window verdict is still a stop.
+    const raw = Object.fromEntries(evaluateRules(buildSnapshot(ds, asOf), {}, { confirm: false }).value.evaluations.map((e) => [e.campaign_id, e.verdict]));
+    expect(raw.C02).toBe("stop");
+  });
+
+  it("stop rule replay: 3 Monday stop readings in a row on >= 30 registrations", () => {
+    // Paid Social's stop is confirmed on the next Monday after the decision point.
+    const late = Object.fromEntries(evaluateRules(buildSnapshot(ds, "2025-04-20")).value.evaluations.map((e) => [e.campaign_id, e]));
+    expect(late.C02!.stopped_on).toBe("2025-04-07");
+    // Nothing is a confirmed stop before enough Mondays have passed.
+    expect(evaluateRules(buildSnapshot(ds, "2025-02-16")).value.evaluations.some((e) => e.verdict === "stop")).toBe(false);
+  });
+
+  it("reallocation on 31 Mar: ₹16,800 from the confirmed stop and the held campaign", () => {
+    const r = reallocation(buildSnapshot(ds, asOf)).value;
+    expect(r.moves.reduce((a, m) => a + m.amount, 0)).toBe(16800);
+    expect(r.effect!.delta.registrations).toBeCloseTo(130.6, 0);
+    expect(r.effect!.delta.visitors).toBeCloseTo(83.1, 0);
   });
 
   it("reallocation moves money from stop to scale and improves the projection", () => {

@@ -202,7 +202,12 @@ describe("rules", () => {
     const custom = evaluateRules(s, { CA: { min_sample: 1, scale_if: 2000, stop_if: 5000 } }).value.evaluations;
     expect(custom.find((e) => e.campaign_id === "CA")!.verdict).toBe("scale"); // 1333 ≤ 2000
     const stop = evaluateRules(s, { CA: { min_sample: 1, scale_if: 500, stop_if: 1000 } }).value.evaluations;
-    expect(stop.find((e) => e.campaign_id === "CA")!.verdict).toBe("stop"); // 1333 ≥ 1000
+    // 1333 ≥ 1000 is a stop reading, but a stop needs 3 in a row at the Monday reviews on ≥ 30 registrations.
+    const ca = stop.find((e) => e.campaign_id === "CA")!;
+    expect(ca.verdict).toBe("change");
+    expect(ca.reason).toMatch(/stop reading 0 of 3/);
+    const raw = evaluateRules(s, { CA: { min_sample: 1, scale_if: 500, stop_if: 1000 } }, { confirm: false }).value.evaluations;
+    expect(raw.find((e) => e.campaign_id === "CA")!.verdict).toBe("stop");
   });
 });
 

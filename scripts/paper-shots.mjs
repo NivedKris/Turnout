@@ -23,7 +23,7 @@ const qs = [
   ["demo-1-on-track", "Are we on track?"],
   ["demo-2-why", "Why?"],
   ["demo-3-recommend", "What should we do?"],
-  ["demo-4-task", "Create a task for Arjun Verma to pause Paid Social, due 3 April 2025."],
+  ["demo-4-task", "Create a task for Arjun Verma for that, due 3 April 2025."],
   ["demo-6-unanswerable", "What was our Instagram CTR in 2023?"],
 ];
 for (const [name, q] of qs) {

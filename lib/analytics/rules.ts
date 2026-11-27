@@ -1,6 +1,7 @@
 import { addDays } from "../time";
 import { BENCHMARKS, RULES, asAssumption } from "./benchmarks";
 import { flows, ratio, registeredVisitors, statusCounts } from "./metrics";
+import { STOP_RULE, STOP_RULE_TEXT, stopStatus, type StopCheck } from "./confirm";
 import { campaignRates, scenario, type ScenarioChange } from "./projection";
 import type { Snapshot } from "./snapshot";
 import type { Assumption, Result } from "./types";
@@ -34,6 +35,10 @@ export type RuleEvaluation = {
   sample: number;
   window: { from: string; to: string };
   signals: { key: string; value: number | null; benchmark: number; weak: boolean }[];
+  /** Present when the window is past the stop line: whether the stop is confirmed by consecutive readings. */
+  stop_check?: StopCheck;
+  /** Day the stop rule first confirmed a stop (sticky), if it has. */
+  stopped_on?: string | null;
 };
 
 const DEFAULTS = { window_days: 14, min_sample: 15, scale_ratio: 0.8, stop_ratio: 1.5 };
@@ -54,10 +59,33 @@ function metricOf(m: RuleMetric, f: ReturnType<typeof flows>, confirmed: number)
 const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 
-export function evaluateRules(
-  s: Snapshot,
-  overrides: Record<string, Partial<Thresholds>> = {},
-): Result<{ evaluations: RuleEvaluation[]; portfolio_cpr: number | null }> {
+/** Single-window verdicts for earlier snapshots (no confirmation), memoised per snapshot. */
+const rawCache = new WeakMap<Snapshot, Map<string, RuleEvaluation>>();
+function rawEvaluations(s: Snapshot, overrides: Record<string, Partial<Thresholds>>): Map<string, RuleEvaluation> {
+  const keyed = Object.keys(overrides).length === 0;
+  const hit = keyed ? rawCache.get(s) : undefined;
+  if (hit) return hit;
+  const m = new Map(evaluateRules(s, overrides, { confirm: false }).value.evaluations.map((e) => [e.campaign_id, e]));
+  if (keyed) rawCache.set(s, m);
+  return m;
+}
+
+type RulesResult = Result<{ evaluations: RuleEvaluation[]; portfolio_cpr: number | null }>;
+const fullCache = new WeakMap<Snapshot, RulesResult>();
+
+export function evaluateRules(s: Snapshot, overrides: Record<string, Partial<Thresholds>> = {}, opts: { confirm?: boolean } = {}): RulesResult {
+  const confirm = opts.confirm ?? true;
+  const plain = confirm && Object.keys(overrides).length === 0;
+  if (plain) {
+    const hit = fullCache.get(s);
+    if (hit) return hit;
+  }
+  const out = evaluateRulesUncached(s, overrides, confirm);
+  if (plain) fullCache.set(s, out);
+  return out;
+}
+
+function evaluateRulesUncached(s: Snapshot, overrides: Record<string, Partial<Thresholds>>, confirm: boolean): RulesResult {
   const end = s.asOf < s.regCloseDay ? s.asOf : s.regCloseDay;
   const window = { from: addDays(end, -(DEFAULTS.window_days - 1)), to: end };
   const portfolio = flows(s, window);
@@ -133,12 +161,34 @@ export function evaluateRules(
         reason: `${metric.replaceAll("_", " ")} ${fmt(value)} beats the scale threshold ${fmt(t.scale_if)} on ${f.registrations} registrations.`,
       };
     }
-    if (worse(value, t.stop_if)) {
-      return {
-        ...base,
-        verdict: "stop" as const,
-        reason: `${metric.replaceAll("_", " ")} ${fmt(value)} is past the stop threshold ${fmt(t.stop_if)} on ${f.registrations} registrations.`,
-      };
+    const isStop = worse(value, t.stop_if);
+    const past = `${metric.replaceAll("_", " ")} ${fmt(value)} is past the stop threshold ${fmt(t.stop_if)} on ${f.registrations} registrations`;
+    if (!confirm) {
+      if (isStop) return { ...base, verdict: "stop" as const, reason: `${past}.` };
+    } else {
+      const st = stopStatus(
+        s,
+        `campaign:${c.campaign_id}:${JSON.stringify(o)}`,
+        (x) => {
+          if (x === s) return { stop: isStop, cost: value, sample: f.registrations };
+          const e = rawEvaluations(x, overrides).get(c.campaign_id);
+          return { stop: e?.verdict === "stop", cost: e?.value ?? null, sample: e?.sample ?? 0 };
+        },
+        s.event.history_start,
+      );
+      if (st.confirmed_on) {
+        const when = st.confirmed_on === s.asOf ? "now" : `on ${st.confirmed_on}`;
+        return { ...base, verdict: "stop" as const, stop_check: st.current, stopped_on: st.confirmed_on, reason: `Stop confirmed ${when}: the ${STOP_RULE.readings}rd stop reading in a row at the Monday reviews. Latest: ${metric.replaceAll("_", " ")} ${fmt(value)} on ${f.registrations} registrations (stop line ${fmt(t.stop_if)}).` };
+      }
+      if (isStop) {
+        return {
+          ...base,
+          verdict: "change" as const,
+          stop_check: st.current,
+          stopped_on: null,
+          reason: `${past}, but that is stop reading ${st.current.count} of ${STOP_RULE.readings} (${STOP_RULE_TEXT}). Hold new spend and fix it; stop only if the next readings confirm.`,
+        };
+      }
     }
     if (weak.length) {
       return {
@@ -161,7 +211,7 @@ export function evaluateRules(
     value: { evaluations, portfolio_cpr: portfolioCpr },
     formula:
       `Window = last ${DEFAULTS.window_days} days up to min(as-of, registration close). Default metric = cost per registration. ` +
-      `Scale if ≤ ${DEFAULTS.scale_ratio}× portfolio CPR; stop if ≥ ${DEFAULTS.stop_ratio}× portfolio CPR; ` +
+      `Scale if ≤ ${DEFAULTS.scale_ratio}× portfolio CPR; stop if ≥ ${DEFAULTS.stop_ratio}× portfolio CPR, confirmed only when ${STOP_RULE_TEXT} (otherwise change: hold new spend); ` +
       `insufficient data if < ${DEFAULTS.min_sample} registrations; change if within thresholds but a funnel signal is weak ` +
       "(below 80% of benchmark, or cancellations above 15%).",
     inputs: {

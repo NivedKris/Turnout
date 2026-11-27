@@ -8,7 +8,6 @@ RISA Growth APM assignment, Part 2 · **Challenge A: Attendee Growth** · city: 
 |---|---|
 | **Live app** | _[Vercel URL: add after deploy]_ |
 | **Passcode** | _[shared in the submission form]_ |
-| **Demo video** | _[link]_ |
 | **3-slide deck** | [Turnout-slides.pdf](Turnout-slides.pdf) (LaTeX source in `slides/`) |
 | **Full write-up (26 pages, with references)** | [README.pdf](README.pdf) |
 
@@ -42,7 +41,7 @@ All screenshots are from the running app, as of **31 Mar 2025**, in one copilot 
 |---|---|---|
 | 1 | *Are we on track?* | Registrations **at risk**: 2,337 now, 2,887 projected vs 3,200. Visitors **off track**: 1,837 projected vs 2,200. Spend under budget. |
 | 2 | *Why?* | Bottleneck: identified → registered is **70.4% vs the plan-implied 88.9%**. Weakest: Creator Partners, Community Groups, Paid Social. |
-| 3 | *What should we do?* | **Stop** Paid Social (₹256 per registration, 14 days) and Creator Partners (₹134); the stop line is ₹110. Move **₹16,800** to the four cheapest campaigns: **+157 registrations, +100 visitors**. 14/14 numbers grounded. |
+| 3 | *What should we do?* | Creator Partners is a **confirmed stop** (3 Monday stop readings in a row, since 3 Mar). Paid Social (₹256 per registration, 14 days, stop line ₹110) is on its **2nd** stop reading, so it is **held**: no new spend, stopped only if the next Monday confirms. Move **₹16,800** (₹9,300 + ₹7,500) to the four cheapest campaigns: **+131 registrations, +83 visitors**. |
 | 4 | *Create a task for that* | A **proposal card** appears. Nothing is written until **Confirm**; the task then shows in Tasks and in the Activity log as `copilot`. |
 | 5 | Edit the data, ask again | Campaigns → Community Groups → Data: log ₹5,000 spend for 31 Mar. Its 14-day CPR goes from ₹25 to **₹103.1**; the verdict and the copilot's answer change on the next request. **Reset** restores the original data. |
 | 6 | *What was our Instagram CTR in 2023?* | *"I don't have any 2023 data"*, with the real coverage (15 Jan–20 Apr 2025) and what data would be needed. |
@@ -118,7 +117,12 @@ The 2,200 goal sits between base (2,097, +2% on 2025) and the demand ceiling (2,
 
 **Projection from the data, 31 Mar:** 2,337 + 50.0/day × 11 days = **2,887 registrations** → × 83.95% confirmed × 72% show-up ÷ 0.95 = **1,837 visitors**. Stretch: 3,077 / 2,067.
 
-**Rules (14-day CPR vs portfolio ₹73.58):** scale ≤ ₹58.86, stop ≥ ₹110.37 → Paid Social ₹256 and Creator Partners ₹134 **stop**; the other five **scale**.
+**Rules (14-day CPR vs portfolio ₹73.58):**
+- **Lines:** scale ≤ ₹58.86, stop ≥ ₹110.37.
+- **Confirmation:** a stop is confirmed only by 3 stop readings in a row at the Monday reviews, each on ≥ 30 registrations.
+- **Creator Partners:** **stop**, confirmed 3 Mar.
+- **Paid Social:** ₹256, but only its 2nd reading in a row, so **change, hold new spend**. It is confirmed on 7 Apr.
+- **The other five:** **scale**.
 
 **Final result (20 Apr):** identified 3,625 / 3,600 (achieved) · registrations 2,800 / 3,200 (87.5%, missed) · visitors 2,050 / 2,200 (93.2%, missed) · spend ₹2,74,000 / ₹3,00,000.
 
@@ -164,21 +168,22 @@ Once campaigns run, evidence replaces estimates: the CPR rules. The two framewor
 
 Each bet has its own scale / change / stop lines, stored in the app (Bets page). The app judges them at every checkpoint: day 7, day 14, weekly, the 31 Mar decision point, registration close, the event, and 14 days after.
 
-| Bet · biggest risk | Early signal | ● Scale | ◐ Change | ○ Stop (3 counted readings in a row) | 31 Mar reading |
+| Bet · biggest risk | Early signal | ● Scale | ◐ Change | ○ Stop (3 Monday readings in a row, each ≥ 30 regs) | 31 Mar reading |
 |---|---|---|---|---|---|
 | 1 Ambassadors · fatigue | CPR 14 d, regs/day 7 d | ≤ ₹50 and ≥ 8/day | ₹50–120 | ≥ ₹120 or ≤ 3/day | ● ₹35, 8.7/day |
 | 2 Club sign-ups · few big clubs | CPR 14 d, confirm rate | ≤ ₹50, confirm ≥ 88% | confirm 78–88% | ≥ ₹120 or confirm ≤ 78% | ◐ ₹49, confirm 85.4% |
 | 3 Referrals · reward abuse | CPR, regs/day, confirm | ≤ ₹45, ≥ 6/day, confirm ≥ 88% | in between | ≥ ₹110, ≤ 2/day or confirm ≤ 78% | ◐ ₹30, 8.7/day, confirm 82.0% |
-| 4 Reels (test) · views don't convert | CPR, confirm | ≤ ₹70, confirm ≥ 88% | ₹70–130 | ≥ ₹130 or confirm ≤ 78% | ○ stopped 28 Feb (3rd counted reading in a row); ₹134 on 31 Mar |
-| 5 Retargeting (test) · weak show-up | CPR, confirm | ≤ ₹80, confirm ≥ 88% | ₹80–150 | ₹150, or the ₹110 portfolio line, whichever comes first | ○ stop reading, ₹256; never crossed its scale line, so the ₹15,000 test is never topped up |
+| 4 Reels (test) · views don't convert | CPR, confirm | ≤ ₹70, confirm ≥ 88% | ₹70–130 | ≥ ₹130 or confirm ≤ 78% | ○ stopped 24 Mar (3rd Monday stop reading in a row) |
+| 5 Retargeting (test) · weak show-up | CPR, confirm | ≤ ₹80, confirm ≥ 88% | ₹80–150 | ₹150, or the ₹110 portfolio line, whichever comes first | ○ stopped 17 Feb (3rd Monday stop reading in a row); its ₹15,000 test is not renewed |
 
-- **Lesson from replaying every week of 2025:**
-  - A "two stop readings in a row" rule would have killed **Clubs** (stop on 28 Feb, 7 Mar and 14 Mar).
-  - It would also have killed **Referrals**, which read stop for six weeks while its cost fell every week (₹325 → ₹113).
-  - Both then recovered: Referrals became the cheapest bet (₹15–34 per registration).
-  - **So a stop needs three counted readings in a row.** A reading counts only when it is a stop reading, it's on ≥ 30 registrations, and the cost is not improving on the previous week.
-  - On the 2025 data, this rule stops only **Reels** (28 Feb). It keeps every bet that later recovered.
-  - One stop reading triggers a change, not a kill.
+- **Lesson from replaying every Monday review of 2025:**
+  - A "two stop readings in a row" rule, even on ≥ 30 registrations, would have stopped **Referrals** on 3 Mar.
+  - Referrals then became the cheapest bet (₹30 per registration on 31 Mar, ₹16 by 7 Apr).
+  - **So a stop needs three stop readings in a row, each on ≥ 30 registrations.** Stops are sticky: once confirmed, the money moves.
+  - On the 2025 data the rule stops **Retargeting** (17 Feb), **Creator Partners** (3 Mar) and **Reels** (24 Mar), and **Paid Social** a week after the decision point (7 Apr).
+  - It keeps Referrals, Clubs and Ambassadors.
+  - A stop reading that isn't confirmed means "change: hold new spend".
+  - The app applies exactly this rule (`lib/analytics/confirm.ts`), in the campaign rules, the bet verdicts and the copilot's tools.
 - **Cause, not just correlation:** holdout colleges (bet 1), a reward A/B test (bet 3) and tracked creator links (bet 4) give comparison groups. The app labels weekly drivers as association, and it measures each logged decision over the 14 days before and after.
 
 ## 6. Product and architecture

@@ -383,7 +383,7 @@ export function buildTools(ctx: ToolContext) {
     }),
 
     get_rule_evaluations: tool({
-      description: "Scale / keep / change / stop / insufficient_data verdict for every campaign with the metric value, thresholds (relative to portfolio or custom), sample size and reason.",
+      description: "Scale / keep / change / stop / insufficient_data verdict for every campaign with the metric value, thresholds (relative to portfolio or custom), sample size and reason. A stop is confirmed only after 3 stop readings in a row at the Monday reviews, each on >= 30 registrations (stopped_on gives the date); a campaign past the stop line without that is \"change\": hold new spend, don't stop yet. stop_readings says how many in a row so far.",
       inputSchema: z.object({ as_of: asOfArg }),
       execute: traced("get_rule_evaluations", ({ as_of }: { as_of?: string }, id) => {
         const s = snap(as_of);
@@ -394,7 +394,7 @@ export function buildTools(ctx: ToolContext) {
           as_of: s.asOf,
           portfolio_cpr_last_14_days: r4(r.value.portfolio_cpr),
           method: r.formula,
-          evaluations: r.value.evaluations.map((e) => ({ id: e.campaign_id, name: e.campaign_name, owner: e.owner_name, verdict: e.verdict, reason: e.reason, metric_value_last_window: r4(e.value), scale_if: r4(e.thresholds.scale_if), stop_if: r4(e.thresholds.stop_if), basis: e.thresholds.basis, sample: e.sample, weak_signals: e.signals.filter((x) => x.weak).map((x) => x.key) })),
+          evaluations: r.value.evaluations.map((e) => ({ id: e.campaign_id, name: e.campaign_name, owner: e.owner_name, verdict: e.verdict, reason: e.reason, stopped_on: e.stopped_on ?? null, stop_readings: e.stop_check ? `${e.stop_check.count} of 3` : null, metric_value_last_window: r4(e.value), scale_if: r4(e.thresholds.scale_if), stop_if: r4(e.thresholds.stop_if), basis: e.thresholds.basis, sample: e.sample, weak_signals: e.signals.filter((x) => x.weak).map((x) => x.key) })),
         };
       }),
     }),
@@ -512,7 +512,7 @@ export function buildTools(ctx: ToolContext) {
     }),
 
     list_bets: tool({
-      description: "The ranked strategic bets (RICE), each with live early-signal states (scale / watch / stop / too early), verdict, spend vs budget, and visitors vs plan.",
+      description: "The ranked strategic bets (RICE), each with live early-signal states (scale / watch / stop / too early), verdict, spend vs budget, and visitors vs plan. A bet is only \"stop\" once 3 Monday stop readings in a row (each >= 30 registrations) confirm it (stopped_on); otherwise it is watch and gets no more money.",
       inputSchema: z.object({ as_of: asOfArg }),
       execute: traced("list_bets", ({ as_of }: { as_of?: string }, id) => {
         const s = snap(as_of);
