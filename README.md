@@ -87,7 +87,7 @@ Sensitivity on 31 Mar (base: **1,837 visitors**), from the engine's scenario fun
 |---|---|---|---|
 | Show-up before the event | 72% (stretch 76%) | Sourced free-event median; the data's actual result was 77.0% | **Biggest lever: ~25.5 visitors per point.** 60% → 1,531; 50% → 1,276; 40% → 1,021 |
 | Walk-ins | 5% of visitors | Actual was 125 / 2,050 = 6.1% | 0% → 1,745; 10% → 1,939 |
-| Venue capacity | 2,500 | No field in the data | Not binding at base; caps the stretch plan (2,988 → 2,500) |
+| Venue capacity | 2,500 (app default: total) | No field in the data | Not binding at base. As a total cap it holds stretch to 2,500; as a per-day limit it doesn't bind (2025's day 1 took 70%, so 2,988 means ≈2,090 on day 1) |
 | Registration close | 11 Apr | Last registration seen 10 Apr | Each day ≈ +50 registrations |
 | Rule thresholds | scale ≤ 0.8×, stop ≥ 1.5× portfolio CPR | No per-campaign cost targets in the source | Paid Social and Creator Partners stop at any multiple from 1.2× to 1.8× |
 | Extra-spend efficiency | 2× recipient's CPR | Diminishing returns | Conservative: reallocation gains are understated |
@@ -106,11 +106,11 @@ visitors     = min( capacity, Σ registered_s × confirm × show_up ÷ (1 − wa
 | | Identified | Registered | Confirmed (× 0.89) | Attend | + Walk-ins | **Visitors** |
 |---|---|---|---|---|---|---|
 | **Base** | 3,928 | 3,108 | 2,766 | 1,992 (× 72%) | 105 | **2,097** |
-| **Stretch** (reach × 1.25, register × 1.08) | 4,910 | 4,196 | 3,735 | 2,838 (× 76%) | 149 | 2,988 → **2,500** (capacity) |
+| **Stretch** (reach × 1.25, register × 1.08) | 4,910 | 4,196 | 3,735 | 2,838 (× 76%) | 149 | **2,988** (demand ceiling) |
 
 ![Base and stretch goal plans](assets/funnel-math.jpg)
 
-The 2,200 goal sits between base and stretch: reachable, but not on base-case conversion.
+The 2,200 goal sits between base (2,097, +2% on 2025) and the demand ceiling (2,988, +46%). The **funded plan reaches 2,282** (104% of goal, ₹120 per visitor vs 2025's ₹134), and 2,418 once the reserve follows the winners. Stretch beyond 2,500 needs the capacity lever: day-2 passes and staggered entry slots, so each day stays under 2,500.
 
 **Projection from the data, 31 Mar:** 2,337 + 50.0/day × 11 days = **2,887 registrations** → × 83.95% confirmed × 72% show-up ÷ 0.95 = **1,837 visitors**. Stretch: 3,077 / 2,067.
 
@@ -122,13 +122,20 @@ The 2,200 goal sits between base and stretch: reachable, but not on base-case co
 
 RICE = Reach × Impact × Confidence ÷ Effort.
 
-| # | Bet | Reach | I | C | E | **RICE** | Budget |
-|---|---|---|---|---|---|---|---|
-| 1 | Campus ambassador network | 40,000 | 2 | 0.8 | 6 | **10,667** | ₹60,000 |
-| 2 | College club group sign-ups | 25,000 | 2 | 0.8 | 4 | **10,000** | ₹40,000 |
-| 3 | Bring-3-friends referrals | 15,000 | 2 | 0.7 | 3 | **7,000** | ₹25,000 |
-| 4 | Creator-led reels | 80,000 | 1 | 0.4 | 5 | **6,400** | ₹60,000 |
-| 5 | Paid social retargeting | 1,20,000 | 0.5 | 0.4 | 4 | **6,000** | ₹95,000 |
+| # | Bet | Reach | I | C | E | **RICE** | Budget | Lift (visitors) |
+|---|---|---|---|---|---|---|---|---|
+| 1 | Campus ambassador network | 40,000 | 2 | 0.8 | 6 | **10,667** | ₹1,00,000 | 659 |
+| 2 | College club group sign-ups | 25,000 | 2 | 0.8 | 4 | **10,000** | ₹80,000 | 689 |
+| 3 | Bring-3-friends referrals | 15,000 | 2 | 0.7 | 3 | **7,000** | ₹30,000 | 355 |
+| 4 | Creator-led reels (test) | 80,000 | 1 | 0.4 | 5 | **6,400** | ₹20,000 | 59 |
+| 5 | Paid social retargeting (test) | 1,20,000 | 0.5 | 0.4 | 4 | **6,000** | ₹15,000 | 55 |
+
+**Money follows the ranking:**
+- **Bets 1–2** get 65% of committed spend.
+- **Bets 4–5** are capped tests that earn more only by crossing their scale line.
+- **The budget:** ₹3,00,000 = bets ₹2,45,000 + always-on channels ₹30,000 + a ₹25,000 reserve for whichever bets cross their scale line.
+- **Lift:** budget ÷ the channel's 2025 cost per verified visitor, with spend above the 2025 level at 2× that cost.
+- **The total:** a no-bet baseline of 465 (always-on 360 + walk-ins 105) plus the bets' 1,817 gives **2,282**.
 
 Once campaigns run, evidence replaces estimates: the CPR rules. The two frameworks agree, because the two lowest-RICE bets are the two campaigns the rules later **stop**.
 
