@@ -63,3 +63,32 @@ export function FormMessage({ ok, error }: { ok?: string | null; error?: string 
     </p>
   );
 }
+
+/**
+ * Date field that always reads as "2 Apr 2025" (Indian day-month order) whatever the
+ * browser locale, while keeping the native date picker on click.
+ */
+export function DateField({ value, onChange, disabled, id, min, max, required, className = "", "aria-label": label }: { value: string; onChange: (v: string) => void; disabled?: boolean; id?: string; min?: string; max?: string; required?: boolean; className?: string; "aria-label"?: string }) {
+  const shown = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`))
+    : "Pick a date";
+  return (
+    <span className={`${base} relative flex cursor-pointer items-center justify-between gap-2 ${disabled ? "opacity-60" : ""} ${className}`}>
+      <span className="truncate">{shown}</span>
+      <span aria-hidden className="text-fg-3">▾</span>
+      <input
+        type="date"
+        id={id}
+        aria-label={label}
+        value={value}
+        min={min}
+        max={max}
+        required={required}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+        onClick={(e) => (e.currentTarget as HTMLInputElement & { showPicker?: () => void }).showPicker?.()}
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+      />
+    </span>
+  );
+}

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { createTaskAction, updateTaskAction } from "@/app/actions";
-import { Button, Field, Input, Select, Textarea, issuesToErrors } from "@/components/ui/form";
+import { Button, Field, Input, Select, Textarea, issuesToErrors, DateField } from "@/components/ui/form";
 import type { TasksView } from "@/lib/server/views";
 
 type Task = TasksView["tasks"][number];
@@ -50,7 +50,7 @@ export function TaskForm({ v, task, onDone, preset }: { v: Pick<TasksView, "owne
         </datalist>
       </Field>
       <Field label="Due date" htmlFor={`${id}-due`} error={errors.due_date}>
-        <Input id={`${id}-due`} type="date" value={form.due_date} onChange={set("due_date")} required />
+        <DateField id={`${id}-due`} value={form.due_date} onChange={(v) => set("due_date")({ target: { value: v } })} required />
       </Field>
       <Field label="Campaign" htmlFor={`${id}-camp`} error={errors.campaign_id}>
         <Select id={`${id}-camp`} value={form.campaign_id ?? ""} onChange={set("campaign_id")}>

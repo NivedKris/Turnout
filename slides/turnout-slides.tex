@@ -104,14 +104,14 @@
 \draw[line] (12.0,-15.85) -- (21.9,-15.85);
 \node[anchor=west,inner sep=0] at (12.0,-16.35) {\fs{11}{12}\bfseries Visitors};
 \node[anchor=west,inner sep=0] at (17.45,-16.35) {\fs{11}{12}\ttfamily\bfseries 2,097};
-\blk{12.0}{16.85}{9.9}{\fs{8.4}{10}\color{fg3}2025 check: identified→registered 80.0\%, show-up 77.0\%\tg{D}}
+\blk{12.0}{16.85}{9.9}{\fs{8.4}{10}\color{fg3}2025 actual: identified→registered 80.0\%, show-up 77.0\%\tg{D}. Our 72\% is deliberately conservative.}
 
 % ---- levers + risk ---------------------------------------------------------
 \blk{22.47}{9.6}{9.9}{\fs{12.5}{15}\bfseries Base → stretch\\[6pt]
   {\fs{10.4}{14}\mdseries\ttfamily 2,097\\ \ \ + 524 \ reach ×1.25 (bets 1–2)\\ \ \ + 210 \ registration ×1.08\\ \ \ + 157 \ show-up 72→76\%\tg{S2}\\ \textbf{= 2,988}}\\[5pt]
-  {\fs{8.8}{11}\mdseries\color{fg2}Capacity: 2,500 per day\tg{A}. Day-2 passes and staggered entry keep each day under it.}}
-\draw[fg,dashed,rounded corners=7pt,line width=0.6pt] (22.47,-14.55) rectangle ++(9.9,-3.0);
-\blk{22.9}{14.85}{9.1}{\lab{Riskiest assumption}\\[4pt]{\fs{10}{12.6}\textbf{Show-up 72\%}\tg{S2}. At 60\%, base falls from 2,097 to \textbf{1,747}; each point is ≈29 visitors. Hedge: register 10\% over need, watch confirm rate weekly.}}
+  {\fs{8.8}{10.8}\mdseries\color{fg2}Stretch show-up (76\%) is still below 2025's 77\%\tg{D}: deliberately conservative. Capacity 2,500 a day\tg{A}: day-2 passes, staggered entry.}}
+\draw[fg,dashed,rounded corners=7pt,line width=0.6pt] (22.47,-14.85) rectangle ++(9.9,-2.85);
+\blk{22.9}{15.1}{9.1}{\lab{Riskiest assumption}\\[4pt]{\fs{10}{12.6}\textbf{Show-up 72\%}\tg{S2}. At 60\%, base falls from 2,097 to \textbf{1,747}; each point is ≈29 visitors. Hedge: register 10\% over need, watch confirm rate weekly.}}
 
 \footer{[S] sourced · [D] 2025 RISA dataset, replayed in the app · [A] assumption.\quad S1 AISHE 2023-24 · S2 PheedLoop Event Data Lab 5 (free-event no-show ≈28\%, large ≈24\%).\quad \textbf{Rates, formulas, overlap and capacity notes: README.pdf §4–§5.}}
 \end{scope}
@@ -123,7 +123,7 @@
 % ===========================================================================
 \begin{tikzpicture}[remember picture,overlay,every node/.append style={text=fg}]
 \begin{scope}[shift={(current page.north west)}]
-\chrome{2}{Where will we place our bets? \textcolor{fg3}{Money follows evidence}}{Five bets ranked by RICE. The top two get 65\% of committed spend; the bottom two get capped tests, and a ₹25,000 reserve goes to whichever bets cross their scale line.}
+\chrome{2}{Where will we place our bets? \textcolor{fg3}{Money follows evidence}}{Five bets ranked by RICE. The top two get 73\% of bet spend; the bottom two get capped tests, and a ₹25,000 reserve goes to whichever bets cross their scale line.}
 
 % ---- anchor: lift bar -------------------------------------------------------
 \def\u{0.0102}% cm per visitor: 3,000 = 30.6 cm
@@ -143,10 +143,10 @@
 
 % ---- table -------------------------------------------------------------------
 \blk{1.5}{8.35}{30.87}{\fs{9.6}{11.4}
-\begin{tabularx}{30.87cm}{@{}P{0.45cm}P{8.3cm}R{1.6cm}R{2.4cm}R{1.5cm}P{3.0cm}LP{4.2cm}@{}}
+\begin{tabularx}{30.87cm}{@{}P{0.45cm}P{8.3cm}R{1.6cm}R{2.4cm}R{1.5cm}P{3.9cm}LP{3.6cm}@{}}
 \hd{\#} & \hd{Bet · why it works} & \hd{RICE} & \hd{Budget} & \hd{₹/vis.} & \hd{Owner · start} & \hd{14-day test} & \hd{KPI} \\\hline
 1 & \textbf{Campus ambassadors}: peers convert interest, lift show-up & 10,667 & ₹1,00,000 & 152 & Meera · 25 Jan & 10 colleges vs 10 held out & CPR ≤ ₹50 \\
-2 & \textbf{Club group sign-ups}: one lead brings 10–30 & 10,000 & ₹80,000 & 116 & Meera · 28 Jan & group form vs links & confirm ≥ 88\% \\
+2 & \textbf{Club group sign-ups}: one lead brings 10–30 & 10,000 & ₹80,000 & 116 & Meera + Arjun · 28 Jan & group form vs links & confirm ≥ 88\% \\
 3 & \textbf{Bring-3-friends}: pre-qualified, pay only the reward & 7,000 & ₹30,000 & 85 & Dev · 12 Feb & A/B the reward & CPR ≤ ₹45 \\
 4 & \textbf{Creator reels} (test): reach the cold arts segment & 6,400 & ₹20,000 & 337 & Nisha · 10 Feb & 3 creators, tracked links & CPR ≤ ₹70 \\
 5 & \textbf{Paid retargeting} (test): re-reach drop-offs & 6,000 & ₹15,000 & 274 & Arjun · 1 Feb & hard cap, fresh creatives & CPR ≤ ₹80 \\\hline
@@ -159,7 +159,7 @@
 \panel{17.27}{14.65}{15.1}{2.75}
 \blk{17.77}{14.95}{14.2}{\lab{Deprioritise · reject}\\[4pt]{\fs{10}{12.6}\textbf{Retargeting}: from the largest line to a ₹15,000 test (it reached ₹256 per registration in 2025\tg{D}). \textbf{Reels}: ₹20,000 test. \textbf{Rejected}: paid headliner, outdoor ads (no attribution).}}
 
-\footer{RICE = Reach × Impact × Confidence ÷ Effort (Intercom), e.g. bet 1: 40,000 × 2 × 0.8 ÷ 6.\quad Constraints: referrals depend on bets 1–2; people dedupe by ID, so lifts don't double-count; Meera owns both top bets.\quad \textbf{Full scoring, constraints and risks: README.pdf §6.}}
+\footer{RICE = Reach × Impact × Confidence ÷ Effort (Intercom), e.g. bet 1: 40,000 × 2 × 0.8 ÷ 6.\quad Constraints: referrals depend on bets 1–2; people dedupe by ID, so lifts don't double-count; Arjun co-owns bet 2, freed by the smaller retargeting test.\quad \textbf{Full scoring, constraints and risks: README.pdf §6.}}
 \end{scope}
 \end{tikzpicture}
 \newpage
@@ -173,30 +173,30 @@
 
 % ---- anchor: threshold table ----------------------------------------------
 \blk{1.5}{4.4}{30.87}{\fs{11.2}{13.4}\renewcommand{\arraystretch}{1.55}
-\begin{tabularx}{30.87cm}{@{}P{5.6cm}P{3.6cm}P{4.6cm}P{3.5cm}LP{5.0cm}@{}}
-\hd{Bet · biggest risk} & \hd{Early signal} & \hd{\gS{} Scale} & \hd{\gW{} Change} & \hd{\gX{} Stop · 2nd reading in a row} & \hd{31 Mar (app)} \\\hline
-\textbf{1 Ambassadors} · fatigue & CPR, regs/day & ≤ ₹50, ≥ 8/day → tranche & ₹50–120 → swap & ≥ ₹120 → pause & \gS{} \textbf{Scale} · ₹35 \\
-\textbf{2 Clubs} · few big clubs & CPR, confirm & ≤ ₹50, ≥ 88\% → tranche & 78–88\% → remind & ≥ ₹120 or ≤ 78\% → hold & \gW{} \textbf{Watch} · confirm 85\% \\
+\begin{tabularx}{30.87cm}{@{}P{5.3cm}P{3.0cm}P{5.9cm}P{3.6cm}LP{4.6cm}@{}}
+\hd{Bet · biggest risk} & \hd{Early signal} & \hd{\gS{} Scale} & \hd{\gW{} Change} & \hd{\gX{} Stop · 3 readings in a row} & \hd{31 Mar (app)} \\\hline
+\textbf{1 Ambassadors} · fatigue & CPR, regs/day & ≤ ₹50, ≥ 8/day → release reserve & ₹50–120 → swap & ≥ ₹120 → pause & \gS{} \textbf{Scale} · ₹35 \\
+\textbf{2 Clubs} · few big clubs & CPR, confirm & ≤ ₹50, ≥ 88\% → release reserve & 78–88\% → remind & ≥ ₹120 or ≤ 78\% → hold & \gW{} \textbf{Watch} · confirm 85\% \\
 \textbf{3 Referrals} · reward abuse & CPR, confirm & ≤ ₹45, ≥ 88\% → raise reward & in between → A/B & ≥ ₹110 or ≤ 78\% → end & \gW{} \textbf{Watch} · confirm 82\% \\
-\textbf{4 Reels (test)} · no conversion & CPR, confirm & ≤ ₹70 → next ₹20,000 & ₹70–130 → re-brief & ≥ ₹130 → end & \gX{} \textbf{Stop} · ₹134 \\
-\textbf{5 Retargeting (test)} · show-up & CPR, confirm & ≤ ₹80 → next ₹15,000 & ₹80–150 → refresh & ₹150 or ₹110 portfolio, first hit → end & \gX{} \textbf{Stop} · ₹256 \\
+\textbf{4 Reels (test)} · no conversion & CPR, confirm & ≤ ₹70 → next ₹20,000 & ₹70–130 → re-brief & ≥ ₹130 → end & \gX{} \textbf{Stopped 28 Feb} (3rd) \\
+\textbf{5 Retargeting (test)} · show-up & CPR, confirm & ≤ ₹80 → next ₹15,000 & ₹80–150 → refresh & ₹150 or ₹110, first hit → end & \gX{} \textbf{Stop} · not topped up \\
 \end{tabularx}}
 
 % ---- timeline + lesson -------------------------------------------------------
-\blk{1.5}{11.25}{14.6}{\fs{12.5}{15}\bfseries Checkpoints}
-\draw[fg3,line width=0.7pt] (2.3,-12.85) -- (15.3,-12.85);
+\blk{1.5}{11.55}{14.6}{\fs{12.5}{15}\bfseries Checkpoints}
+\draw[fg3,line width=0.7pt] (2.3,-13.1) -- (15.3,-13.1);
 \foreach \x/\top/\bot in {2.3/{Day 7}/{first read}, 4.47/{Day 14}/{first verdict}, 6.63/{Weekly}/{review}, 8.8/{31 Mar}/{decision point}, 10.97/{11 Apr}/{reg. closes}, 13.13/{12–13 Apr}/{show-up}, 15.3/{+14 d}/{outcomes}}{
-  \fill[fg] (\x,-12.85) circle (0.12);
-  \node[anchor=south,inner sep=0] at (\x,-12.55) {\fs{9}{10}\ttfamily\bfseries\top};
-  \node[anchor=north,inner sep=0] at (\x,-13.12) {\fs{8.6}{10}\color{fg2}\bot};
+  \fill[fg] (\x,-13.1) circle (0.12);
+  \node[anchor=south,inner sep=0] at (\x,-12.8) {\fs{9}{10}\ttfamily\bfseries\top};
+  \node[anchor=north,inner sep=0] at (\x,-13.37) {\fs{8.6}{10}\color{fg2}\bot};
 }
-\draw[fg,rounded corners=7pt,line width=0.8pt] (1.5,-14.2) rectangle ++(14.6,-3.25);
-\blk{1.95}{14.5}{13.7}{\lab{Lesson from replaying 2025}\\[4pt]{\fs{10.4}{13}On 7 Mar bets 1 and 2 crossed their stop lines (one on only 17 registrations), yet by 31 Mar both were back under the scale line. \textbf{So a stop needs two readings in a row;} one bad fortnight triggers a change.}}
+\draw[fg,rounded corners=7pt,line width=0.8pt] (1.5,-14.45) rectangle ++(14.6,-3.25);
+\blk{1.95}{14.75}{13.7}{\lab{Lesson from replaying 2025}\\[4pt]{\fs{10}{12.6}Week by week, a two-in-a-row rule would have killed Clubs and Referrals, and Referrals then became the cheapest bet (₹15–34). \textbf{So a stop needs 3 readings in a row, each on ≥ 30 registrations with cost not improving.} In 2025 that stops only Reels (28 Feb).}}
 
 % ---- copilot ----------------------------------------------------------------
-\blk{17.27}{11.25}{15.1}{\fs{12.5}{15}\bfseries The copilot makes the call, a person confirms}
-\node[anchor=north west,inner sep=0] at (17.27,-12.2) {\includegraphics[width=8.4cm]{img/copilot-proposal.png}};
-\blk{26.15}{12.2}{6.22}{\raggedright\fs{10}{12.8}\color{fg2}On 31 Mar it flags \textbf{\color{fg}Paid Social at ₹256}, past both stop lines, and proposes moving \textbf{\color{fg}₹16,800} for +157 registrations and +100 visitors.\\[6pt]Nothing changes until someone presses \textbf{\color{fg}Confirm}.}
+\blk{17.27}{11.55}{15.1}{\fs{12.5}{15}\bfseries The copilot makes the call, a person confirms}
+\node[anchor=north west,inner sep=0] at (17.27,-12.45) {\includegraphics[width=7.8cm]{img/copilot-proposal.png}};
+\blk{25.5}{12.45}{6.87}{\raggedright\fs{9.6}{12}\color{fg2}On 31 Mar it flags \textbf{\color{fg}Paid Social at ₹256}, past both stop lines, and proposes moving \textbf{\color{fg}₹16,800} for +157 registrations and +100 visitors. Asked for a task, it drafts this one.\\[6pt]Nothing changes until someone presses \textbf{\color{fg}Confirm}. 29/30 test questions correct.\\[6pt]\textbf{\color{fg}Dashboard:} Bets shows each signal live; Decisions logs every call.}
 
 \footer{Portfolio rule on every campaign: scale ≤ 0.8×, stop ≥ 1.5× the 14-day portfolio CPR (₹58.86 / ₹110.37 on 31 Mar)\tg{A}. \gS{} scale · \gW{} watch · \gX{} stop.\quad \textbf{Full thresholds, experiment design and copilot grounding: README.pdf §6.1, §8.}}
 \end{scope}

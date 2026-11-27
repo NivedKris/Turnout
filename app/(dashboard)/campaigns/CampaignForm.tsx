@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createCampaignAction, deleteCampaignAction, updateCampaignAction } from "@/app/actions";
-import { Button, Field, Input, Select, Textarea, issuesToErrors } from "@/components/ui/form";
+import { Button, Field, Input, Select, Textarea, issuesToErrors, DateField } from "@/components/ui/form";
 import { withAsOf } from "@/components/shell/nav";
 
 export type CampaignFormInit = {
@@ -124,10 +124,10 @@ export function CampaignForm({ init, owners, asOf }: { init: CampaignFormInit; o
           </Select>
         </Field>
         <Field label="Planned start" htmlFor="c-start" error={errors.planned_start}>
-          <Input id="c-start" type="date" value={f.planned_start} onChange={set("planned_start")} required />
+          <DateField id="c-start" value={f.planned_start} onChange={(v) => set("planned_start")({ target: { value: v } })} required />
         </Field>
         <Field label="Planned end" htmlFor="c-end" error={errors.planned_end}>
-          <Input id="c-end" type="date" value={f.planned_end} onChange={set("planned_end")} required />
+          <DateField id="c-end" value={f.planned_end} onChange={(v) => set("planned_end")({ target: { value: v } })} required />
         </Field>
         <Field label="Planned budget (₹)" htmlFor="c-budget" error={errors.budget_planned_inr} hint="Optional. The source has no per-campaign budgets">
           <Input id="c-budget" inputMode="numeric" value={f.budget_planned_inr} onChange={set("budget_planned_inr")} />

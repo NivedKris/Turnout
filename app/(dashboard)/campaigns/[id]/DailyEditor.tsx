@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { deleteDailyRowAction, importDailyCsvAction, logDailyMetricsAction, updateDailyRowAction } from "@/app/actions";
 import { OriginBadge } from "@/components/matrix/primitives";
-import { Button, FormMessage, Input } from "@/components/ui/form";
+import { Button, FormMessage, Input, DateField } from "@/components/ui/form";
 import type { CampaignView } from "@/lib/server/views";
 
 type Row = CampaignView["daily"][number];
@@ -78,7 +78,7 @@ export function DailyEditor({ campaignId, rows, asOf, minDay }: { campaignId: st
           <tbody>
             <tr className="border-b border-line bg-surface-2">
               <td className="py-1 pr-2">
-                <Input aria-label="Date" type="date" min={minDay} value={draft.activity_date} onChange={(e) => setDraft({ ...draft, activity_date: e.target.value })} className="py-0.5" />
+                <DateField aria-label="Date" min={minDay} value={draft.activity_date} onChange={(v) => setDraft({ ...draft, activity_date: v })} className="py-0.5" />
               </td>
               {COLS.map(([k, l]) => (
                 <td key={k} className="py-1 pr-2">

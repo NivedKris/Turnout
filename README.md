@@ -135,7 +135,7 @@ RICE = Reach × Impact × Confidence ÷ Effort.
 | 5 | Paid social retargeting (test) | 1,20,000 | 0.5 | 0.4 | 4 | **6,000** | ₹15,000 | 55 |
 
 **Money follows the ranking:**
-- **Bets 1–2** get 65% of committed spend.
+- **Bets 1–2** get 73% of bet spend (₹1,80,000 of ₹2,45,000).
 - **Bets 4–5** are capped tests that earn more only by crossing their scale line.
 - **The budget:** ₹3,00,000 = bets ₹2,45,000 + always-on channels ₹30,000 + a ₹25,000 reserve for whichever bets cross their scale line.
 - **Lift:** budget ÷ the channel's 2025 cost per verified visitor, with spend above the 2025 level at 2× that cost.
@@ -155,7 +155,7 @@ Once campaigns run, evidence replaces estimates: the CPR rules. The two framewor
 - **Risks:**
   - ambassador fatigue and uneven quality;
   - a few big clubs carrying bet 2;
-  - one owner (Meera Iyer) for both top bets, so we'd add a co-owner;
+  - one owner (Meera Iyer) for both top bets, so Arjun Verma co-owns bet 2 (his time is freed by the smaller retargeting test);
   - reward abuse on referrals;
   - creator views that never convert;
   - weaker show-up from paid traffic.
@@ -164,19 +164,21 @@ Once campaigns run, evidence replaces estimates: the CPR rules. The two framewor
 
 Each bet has its own scale / change / stop lines, stored in the app (Bets page). The app judges them at every checkpoint: day 7, day 14, weekly, the 31 Mar decision point, registration close, the event, and 14 days after.
 
-| Bet · biggest risk | Early signal | ● Scale | ◐ Change | ○ Stop (2nd reading in a row) | 31 Mar reading |
+| Bet · biggest risk | Early signal | ● Scale | ◐ Change | ○ Stop (3 counted readings in a row) | 31 Mar reading |
 |---|---|---|---|---|---|
 | 1 Ambassadors · fatigue | CPR 14 d, regs/day 7 d | ≤ ₹50 and ≥ 8/day | ₹50–120 | ≥ ₹120 or ≤ 3/day | ● ₹35, 8.7/day |
 | 2 Club sign-ups · few big clubs | CPR 14 d, confirm rate | ≤ ₹50, confirm ≥ 88% | confirm 78–88% | ≥ ₹120 or confirm ≤ 78% | ◐ ₹49, confirm 85.4% |
 | 3 Referrals · reward abuse | CPR, regs/day, confirm | ≤ ₹45, ≥ 6/day, confirm ≥ 88% | in between | ≥ ₹110, ≤ 2/day or confirm ≤ 78% | ◐ ₹30, 8.7/day, confirm 82.0% |
-| 4 Reels (test) · views don't convert | CPR, confirm | ≤ ₹70, confirm ≥ 88% | ₹70–130 | ≥ ₹130 or confirm ≤ 78% | ○ ₹134, confirm 77.7% |
-| 5 Retargeting (test) · weak show-up | CPR, confirm | ≤ ₹80, confirm ≥ 88% | ₹80–150 | ₹150, or the ₹110 portfolio line, whichever comes first | ○ ₹256 |
+| 4 Reels (test) · views don't convert | CPR, confirm | ≤ ₹70, confirm ≥ 88% | ₹70–130 | ≥ ₹130 or confirm ≤ 78% | ○ stopped 28 Feb (3rd counted reading in a row); ₹134 on 31 Mar |
+| 5 Retargeting (test) · weak show-up | CPR, confirm | ≤ ₹80, confirm ≥ 88% | ₹80–150 | ₹150, or the ₹110 portfolio line, whichever comes first | ○ stop reading, ₹256; never crossed its scale line, so the ₹15,000 test is never topped up |
 
-- **Lesson from replaying 2025:**
-  - On 7 Mar, bets 1 and 2 crossed their stop lines (₹148 on 87 registrations, and ₹278 on just 17).
-  - By 31 Mar, both were back under the scale line.
-  - Bet 4 read stop at every checkpoint.
-  - So a stop needs **two readings in a row**; one bad fortnight triggers a change instead.
+- **Lesson from replaying every week of 2025:**
+  - A "two stop readings in a row" rule would have killed **Clubs** (stop on 28 Feb, 7 Mar and 14 Mar).
+  - It would also have killed **Referrals**, which read stop for six weeks while its cost fell every week (₹325 → ₹113).
+  - Both then recovered: Referrals became the cheapest bet (₹15–34 per registration).
+  - **So a stop needs three counted readings in a row.** A reading counts only when it is a stop reading, it's on ≥ 30 registrations, and the cost is not improving on the previous week.
+  - On the 2025 data, this rule stops only **Reels** (28 Feb). It keeps every bet that later recovered.
+  - One stop reading triggers a change, not a kill.
 - **Cause, not just correlation:** holdout colleges (bet 1), a reward A/B test (bet 3) and tracked creator links (bet 4) give comparison groups. The app labels weekly drivers as association, and it measures each logged decision over the 14 days before and after.
 
 ## 6. Product and architecture

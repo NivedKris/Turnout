@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { createDecisionAction, createTaskAction, updateCampaignAction } from "@/app/actions";
-import { Button, Input, Select } from "@/components/ui/form";
+import { Button, DateField, Input, Select } from "@/components/ui/form";
 
 type TaskProposal = {
   proposal_id: string;
@@ -71,7 +71,7 @@ export function ConfirmCard({ p }: { p: Proposal }) {
             <Input aria-label="Task title" value={draft.title} disabled={state !== "pending"} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
             <div className="grid grid-cols-3 gap-2">
               <Input aria-label="Owner" value={draft.owner_name} disabled={state !== "pending"} onChange={(e) => setDraft({ ...draft, owner_name: e.target.value })} />
-              <Input aria-label="Due date" type="date" value={draft.due_date} disabled={state !== "pending"} onChange={(e) => setDraft({ ...draft, due_date: e.target.value })} />
+              <DateField aria-label="Due date" value={draft.due_date} disabled={state !== "pending"} onChange={(v) => setDraft({ ...draft, due_date: v })} />
               <Select aria-label="Priority" value={draft.priority} disabled={state !== "pending"} onChange={(e) => setDraft({ ...draft, priority: e.target.value as "P0" })}>
                 {["P0", "P1", "P2"].map((x) => (
                   <option key={x}>{x}</option>

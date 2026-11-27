@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { addTargetVersionAction, resetDatasetAction, updateSettingsAction } from "@/app/actions";
-import { Button, Field, FormMessage, Input, issuesToErrors } from "@/components/ui/form";
+import { Button, Field, FormMessage, Input, issuesToErrors, DateField } from "@/components/ui/form";
 
 export function ConstraintsForms({ capacity, asOf, latest }: { capacity: number; asOf: string; latest: { identified: number; registrations: number; visitors: number; budget: number } }) {
   const [cap, setCap] = useState(String(capacity));
@@ -39,7 +39,7 @@ export function ConstraintsForms({ capacity, asOf, latest }: { capacity: number;
             <Input id="tv-label" value={t.target_version} onChange={set("target_version")} placeholder="Stretch push" required />
           </Field>
           <Field label="Effective from" htmlFor="tv-day" error={errors.effective_day}>
-            <Input id="tv-day" type="date" value={t.effective_day} onChange={set("effective_day")} required />
+            <DateField id="tv-day" value={t.effective_day} onChange={(v) => set("effective_day")({ target: { value: v } })} required />
           </Field>
           <Field label="Budget ₹" htmlFor="tv-budget" error={errors.marketing_budget_inr}>
             <Input id="tv-budget" inputMode="numeric" value={t.marketing_budget_inr} onChange={set("marketing_budget_inr")} />

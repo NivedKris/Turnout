@@ -1,5 +1,6 @@
 "use client";
 
+import { DateField } from "@/components/ui/form";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition, type ReactNode } from "react";
 
@@ -56,13 +57,13 @@ export function FilterBar({
         </div>
         <label className="flex items-center gap-2 text-[12px] text-fg-3">
           <span className="sr-only">Custom date</span>
-          <input
-            type="date"
+          <DateField
+            aria-label="Viewing as of"
             min={min}
             max={max}
             value={asOf}
-            onChange={(e) => e.target.value && set("asOf", e.target.value)}
-            className="rounded-full border border-line bg-bg px-3 py-1 font-mono text-[12px] text-fg"
+            onChange={(v) => v && set("asOf", v)}
+            className="!w-auto rounded-full px-3 py-1 text-[12px]"
           />
         </label>
       </div>

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createBetAction, createDecisionAction, deleteBetAction, updateBetAction } from "@/app/actions";
 import { withAsOf } from "@/components/shell/nav";
-import { Button, Field, FormMessage, Input, Select, Textarea, issuesToErrors } from "@/components/ui/form";
+import { Button, Field, FormMessage, Input, Select, Textarea, issuesToErrors, DateField } from "@/components/ui/form";
 
 type SignalDraft = { key: string; label: string; metric: string; window_days: number; direction: "lower_is_better" | "higher_is_better"; scale_if: number; stop_if: number; min_sample: number };
 export type BetDraft = {
@@ -89,10 +89,10 @@ export function BetForm({ init, campaigns, owners, asOf }: { init: BetDraft; cam
           </Select>
         </Field>
         <Field label="Start" htmlFor="b-start" error={errors.start_day}>
-          <Input id="b-start" type="date" value={b.start_day} onChange={(e) => set("start_day", e.target.value)} />
+          <DateField id="b-start" value={b.start_day} onChange={(v) => set("start_day", v)} />
         </Field>
         <Field label="End" htmlFor="b-end" error={errors.end_day}>
-          <Input id="b-end" type="date" value={b.end_day} onChange={(e) => set("end_day", e.target.value)} />
+          <DateField id="b-end" value={b.end_day} onChange={(v) => set("end_day", v)} />
         </Field>
         <Field label="Budget (₹)" htmlFor="b-budget" error={errors.budget_inr}>
           <Input id="b-budget" inputMode="numeric" value={b.budget_inr} onChange={(e) => set("budget_inr", Number(e.target.value) || 0)} />
@@ -248,7 +248,7 @@ export function DecisionForm({
         </Select>
       </Field>
       <Field label="Data date" htmlFor="d-asof">
-        <Input id="d-asof" type="date" value={d.as_of} onChange={set("as_of")} />
+        <DateField id="d-asof" value={d.as_of} onChange={(v) => set("as_of")({ target: { value: v } })} />
       </Field>
       <Field label="Bet" htmlFor="d-bet">
         <Select id="d-bet" value={d.bet_id} onChange={set("bet_id")}>
