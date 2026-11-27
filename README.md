@@ -225,13 +225,20 @@ Each bet has its own scale / change / stop lines, stored in the app (Bets page).
 
 | What | Result |
 |---|---|
-| `npm test`: unit and golden tests (edge cases, pandas-checked engine, strategy engine, grounding, routing) | **60 / 60 pass** |
-| `npm run eval`: 30 copilot questions in 11 categories, expected values computed live | **29 / 30 (96.7%)**; 172 / 193 numbers grounded (89.1%). Full table: [README.pdf, Appendix A](README.pdf) |
+| `npm test`: unit and golden tests (edge cases, pandas-checked engine, strategy engine, grounding, routing) | **63 / 63 pass** |
+| `npm run eval`: 30 copilot questions in 11 categories, expected values computed live | **27 / 30 (90%)**; 146 / 165 numbers grounded (88.5%), latest run, after the stop-rule change. Full table: [README.pdf, Appendix A](README.pdf) |
 | `scripts/onboarding-e2e.mjs`: welcome → tour → help → skip, in real Chrome | pass |
 | `scripts/assistant/voice-e2e.mjs`: voice with a simulated mic: navigate, ask, propose, "no" | 5 / 5 |
 | By hand | worked examples vs pandas; the data-change loop (C07 CPR ₹25 → ₹103.1); every screen on 3 dates; provider fallbacks; both themes; reset |
 
-The first eval scored 23/30; its failures led to four fixes. The remaining failure is ambiguity: *"the partners campaign"* was answered for one campaign instead of asking which.
+**Eval history:** 23/30 at first → four fixes → 29/30 → **27/30** on the latest run, after the stop rule and the tool-first change.
+
+The three latest failures were all answered by fallback models while the main Groq model was rate-limited:
+- **M1, ambiguity:** *"the partners campaign"* was answered for one campaign instead of asking which.
+- **Q2:** it gave the right breakdown (40 internal + 10 staff + 10 test) but never stated the total of 60.
+- **U4:** it checked data coverage but didn't plainly say the data can't explain cancellations.
+
+The checks were not loosened to pass them.
 
 ## 9. Tools used
 
@@ -318,7 +325,13 @@ npm run dev                  # http://localhost:3000
   3. the AI, against answers computed live;
   4. the product, in a real browser.
 
-  Failures changed the product: 23/30 → four fixes → 29/30, and the voice browser test found a turn-taking race, which was fixed.
+  Failures changed the product:
+  - the eval went from 23/30, through four fixes, to 29/30;
+  - the weekly replay replaced a stop rule that would have killed a winning bet;
+  - a fallback model that answered without tools led to tool-first answering;
+  - the voice browser test found a turn-taking race, which was fixed.
+
+  The latest eval is 27/30.
 - **Still weak:**
   - **The eval set:** I wrote all 30 questions myself, so it is a smoke test, not a benchmark.
   - **Ungrounded numbers:** about 1 in 10 numbers isn't grounded. These are flagged, not blocked.
