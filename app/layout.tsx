@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Doto, Geist, Geist_Mono } from "next/font/google";
 import { welcomeScript, welcomeStyle } from "@/components/onboarding/Welcome";
+import { ServiceWorker } from "@/components/shell/ServiceWorker";
 import { themeScript } from "@/components/ui/ThemeToggle";
 import "./globals.css";
 
@@ -12,6 +13,8 @@ const dot = Doto({ variable: "--font-doto", subsets: ["latin"], weight: ["400", 
 export const metadata: Metadata = {
   title: { default: "Turnout · Growth Center", template: "%s · Turnout" },
   description: "Attendee growth command center for CampusFest, Bengaluru: measure, diagnose, decide and act.",
+  applicationName: "Turnout",
+  appleWebApp: { capable: true, title: "Turnout", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = { themeColor: "#000000", colorScheme: "dark light" };
@@ -28,7 +31,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: welcomeScript }} />
         <style dangerouslySetInnerHTML={{ __html: welcomeStyle }} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <ServiceWorker />
+      </body>
     </html>
   );
 }

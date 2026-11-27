@@ -44,19 +44,13 @@ next-env.d.ts
 # local
 *.local
 
-# LaTeX build files (paper/build.sh writes README.pdf at the root)
-paper/*.aux
-paper/*.log
-paper/*.fls
-paper/*.fdb_latexmk
-paper/*.bbl
-paper/*.blg
-paper/*.out
-paper/*.toc
-paper/turnout.pdf
 slides/*.aux
 slides/*.log
 slides/*.fls
 slides/*.fdb_latexmk
 slides/*.xdv
 slides/turnout-slides.pdf
+
+# Working material kept locally (README.pdf and the slides are the published versions)
+/docs/
+/paper/

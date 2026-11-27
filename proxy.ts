@@ -4,7 +4,8 @@ import { NextResponse, type NextRequest } from "next/server";
  * Shared-passcode gate for the demo (APP_PASSCODE). Unset = open.
  * Admin routes keep their own bearer token; health stays public.
  */
-const OPEN = [/^\/unlock/, /^\/api\/unlock/, /^\/api\/health/, /^\/api\/admin\//, /^\/_next\//, /^\/favicon/];
+// PWA files (manifest, icons, service worker, offline page) must load before the passcode is entered.
+const OPEN = [/^\/unlock/, /^\/api\/unlock/, /^\/api\/health/, /^\/api\/admin\//, /^\/_next\//, /^\/favicon/, /^\/icon/, /^\/apple-icon/, /^\/icons\//, /^\/manifest\.webmanifest$/, /^\/sw\.js$/, /^\/offline\.html$/];
 
 async function digest(s: string) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`turnout:${s}`));

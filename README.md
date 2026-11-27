@@ -14,7 +14,7 @@ RISA Growth APM assignment, Part 2 · **Challenge A: Attendee Growth** · city: 
 
 **Why Bengaluru.** Bengaluru Urban has **1,148 colleges, the most of any district in India** (Pune 517, Hyderabad 465; AISHE 2023-24). The dataset's channels (ambassadors, college partnerships, clubs, referrals) work best where many campuses sit close together, and the college count gives the goal plan a sourced starting population instead of a guess.
 
-![Overview at the 31 March decision point](docs/img/overview.png)
+![Overview at the 31 March decision point](assets/overview.png)
 
 ### 60-second reviewer tour
 
@@ -49,15 +49,15 @@ All screenshots are from the running app, as of **31 Mar 2025**, in one copilot 
 
 | Step 3: recommendation, with the trace | Step 4: proposed, not created |
 |---|---|
-| ![](docs/img/demo-3-recommend.png) | ![](docs/img/demo-4-task.png) |
+| ![](assets/demo-3-recommend.png) | ![](assets/demo-4-task.png) |
 
 | Step 1: on track? | Step 6: honest about what it can't answer |
 |---|---|
-| ![](docs/img/demo-1-on-track.png) | ![](docs/img/demo-6-unanswerable.png) |
+| ![](assets/demo-1-on-track.png) | ![](assets/demo-6-unanswerable.png) |
 
 ## 2. Research and data sources
 
-Researched before building: fest attendance, the city's student base, ad costs, funnel and no-show benchmarks, and the free-tier limits of every service used. **Sponsor deal sizes were not researched**: they belong to Challenge B. Full notes, including where sources conflict: [docs/research.md](docs/research.md).
+Researched before building: fest attendance, the city's student base, ad costs, funnel and no-show benchmarks, and the free-tier limits of every service used. **Sponsor deal sizes were not researched**: they belong to Challenge B. Full notes, including where sources conflict: [README.pdf §3](README.pdf).
 
 | Metric | Value | Source | Label |
 |---|---|---|---|
@@ -94,7 +94,7 @@ Sensitivity on 31 Mar (base: **1,837 visitors**), from the engine's scenario fun
 
 ## 4. Calculations
 
-Full worked examples: [README.pdf §5](README.pdf) and [docs/calculations.md](docs/calculations.md). Every figure is checked against an independent pandas computation (`tests/engine.golden.test.ts`).
+Full worked examples: [README.pdf §5](README.pdf). Every figure is checked against an independent pandas computation (`tests/engine.golden.test.ts`).
 
 **Goal plan, bottom up** (the "how high can we aim?" answer):
 
@@ -108,7 +108,7 @@ visitors     = min( capacity, Σ registered_s × confirm × show_up ÷ (1 − wa
 | **Base** | 3,928 | 3,108 | 2,766 | 1,992 (× 72%) | 105 | **2,097** |
 | **Stretch** (reach × 1.25, register × 1.08) | 4,910 | 4,196 | 3,735 | 2,838 (× 76%) | 149 | 2,988 → **2,500** (capacity) |
 
-![Base and stretch goal plans](paper/figures/funnel-math.jpg)
+![Base and stretch goal plans](assets/funnel-math.jpg)
 
 The 2,200 goal sits between base and stretch: reachable, but not on base-case conversion.
 
@@ -140,7 +140,7 @@ Once campaigns run, evidence replaces estimates: the CPR rules. The two framewor
 
 ## 6. Product and architecture
 
-![Measure, diagnose, decide, manage](paper/figures/strategy-loop.jpg)
+![Measure, diagnose, decide, manage](assets/strategy-loop.jpg)
 
 | Module | Screens | What it does |
 |---|---|---|
@@ -150,15 +150,15 @@ Once campaigns run, evidence replaces estimates: the CPR rules. The two framewor
 | **Manage** | Tasks, Decisions, Team, Activity, Targets | Owners and due dates; decision outcomes 14 days later; workload; change log; reset |
 | **Ask** | Copilot terminal, chat (⌘I), voice (⌘J) | Grounded answers with traces; proposals that wait for a yes; navigation by voice |
 
-![Architecture](paper/figures/architecture.jpg)
+![Architecture](assets/architecture.jpg)
 
 **How a change reaches the analytics:** every write bumps `meta.data_version`. Each request reads only that counter and reloads the dataset when it has changed, so pages, the API and the copilot all recompute from the same data. Cold start is ~1.5 s on M0; warm pages take 0.06–0.8 s.
 
-![From an edit to every answer](paper/figures/data-flow.jpg)
+![From an edit to every answer](assets/data-flow.jpg)
 
 ## 7. AI chatbot design
 
-![How the copilot answers](paper/figures/copilot-loop.jpg)
+![How the copilot answers](assets/copilot-loop.jpg)
 
 - **Grounded:** 24 tools call the same engine as the screens. A sandboxed `calculate` tool does all arithmetic. Every number in an answer is matched against tool output; unmatched numbers are flagged **UNSUPPORTED**, and the verdict panel says GROUNDED or CHECK.
 - **Confirm before writing:** the `propose_*` tools only return drafts. **Confirm** uses the screens' write path with `actor: "copilot"`. The voice assistant asks "Shall I…?" and acts only on a clear yes.
@@ -178,7 +178,7 @@ Once campaigns run, evidence replaces estimates: the CPR rules. The two framewor
 | What | Result |
 |---|---|
 | `npm test`: unit and golden tests (edge cases, pandas-checked engine, strategy engine, grounding, routing) | **60 / 60 pass** |
-| `npm run eval`: 30 copilot questions in 11 categories, expected values computed live | **29 / 30 (96.7%)**; 172 / 193 numbers grounded (89.1%). Full table: [docs/eval-results.md](docs/eval-results.md) |
+| `npm run eval`: 30 copilot questions in 11 categories, expected values computed live | **29 / 30 (96.7%)**; 172 / 193 numbers grounded (89.1%). Full table: [README.pdf, Appendix A](README.pdf) |
 | `scripts/onboarding-e2e.mjs`: welcome → tour → help → skip, in real Chrome | pass |
 | `scripts/assistant/voice-e2e.mjs`: voice with a simulated mic: navigate, ask, propose, "no" | 5 / 5 |
 | By hand | worked examples vs pandas; the data-change loop (C07 CPR ₹25 → ₹103.1); every screen on 3 dates; provider fallbacks; both themes; reset |
@@ -234,7 +234,7 @@ npm run dev                  # http://localhost:3000
   2. Set Node to 22, and the Functions region to the one nearest the Atlas cluster.
   3. In Atlas, allow `0.0.0.0/0`.
   4. On a fresh database, call `POST /api/admin/seed` once.
-- **Rebuild README.pdf:** `./paper/build.sh` (needs the `texlive/texlive` Docker image).
+- **Rebuild the slides:** `./slides/build.sh` (needs the `texlive/texlive` Docker image).
 
 ## 11. Known limitations and next steps
 
@@ -263,7 +263,7 @@ npm run dev                  # http://localhost:3000
 
 ## 13. Ownership: how I decided, tested, and what's still weak
 
-- **Decided:** research first, written down with sources and conflicts ([research](docs/research.md)). Every decision is logged with its date and reason ([decisions](docs/decisions.md)). The dataset was profiled before any design ([dataset](docs/dataset.md)), so its 11 traps became tested engine rules.
+- **Decided:** research first, written down with sources and conflicts. Every decision is logged with its date and reason. The dataset was profiled before any design, so its 11 traps became tested engine rules (all in [README.pdf](README.pdf)).
 - **Tested:** in this order:
   1. independent numbers (pandas vs TypeScript);
   2. edge cases;
@@ -279,4 +279,4 @@ npm run dev                  # http://localhost:3000
 
 ---
 
-Docs: [research](docs/research.md) · [dataset profile](docs/dataset.md) · [calculations](docs/calculations.md) · [eval results](docs/eval-results.md) · [decisions log](docs/decisions.md) · [diagram prompts](docs/diagram-prompts.md) · [full write-up (PDF)](README.pdf)
+In depth: [README.pdf](README.pdf), with research and sources, the dataset profile, every calculation, the full eval table and the decisions log · Slides: [Turnout-slides.pdf](Turnout-slides.pdf)
