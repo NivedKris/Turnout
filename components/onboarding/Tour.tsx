@@ -45,10 +45,10 @@ export function HelpButton() {
       onClick={startEvent}
       aria-label="Help: replay the tour"
       title="Replay the tour"
-      className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[12px] text-fg-2 hover:border-fg-2 hover:text-fg"
+      className="flex items-center gap-1.5 rounded-full border border-line px-2 py-1.5 text-[12px] text-fg-2 hover:border-fg-2 hover:text-fg sm:px-3"
     >
       <span className="grid h-4 w-4 place-items-center rounded-full bg-fg font-mono text-[10px] font-bold text-bg">?</span>
-      Help
+      <span className="hidden sm:inline">Help</span>
     </button>
   );
 }

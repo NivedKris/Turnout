@@ -149,6 +149,9 @@ body {
   .tn-blink, .tn-spot-feature { animation: none; }
 }
 
+/* Off-canvas panels (the chat drawer) must never widen the page on phones. clip, unlike hidden, keeps sticky headers working. */
+html, body { overflow-x: clip; }
+
 .tn-glass {
   background: color-mix(in srgb, var(--surface-2) 70%, transparent);
   backdrop-filter: blur(20px);

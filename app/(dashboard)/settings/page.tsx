@@ -27,7 +27,8 @@ async function Settings({ searchParams }: PageProps<"/settings">) {
       <PageHeader title="Targets & constraints" subtitle="Change goals, budget and capacity. Every change recalculates the dashboard and the copilot." />
       <FilterBar asOf={v.meta.asOf} min={v.meta.historyStart} max={v.meta.historyEnd} presets={v.meta.presets} />
       <Panel code="TGT" title="Target versions">
-        <table className="w-full font-mono text-[12px] tabular">
+        <div className="-mx-1 overflow-x-auto px-1">
+        <table className="w-full font-mono text-[12px] tabular min-w-[560px]">
           <thead>
             <tr className="border-b border-line text-left text-[10px] uppercase tracking-wider text-fg-3">
               {["Version", "Effective (IST)", "Identified", "Registrations", "Visitors", "Budget", ""].map((h) => (
@@ -53,6 +54,7 @@ async function Settings({ searchParams }: PageProps<"/settings">) {
             ))}
           </tbody>
         </table>
+</div>
       </Panel>
       <ConstraintsForms
         capacity={v.capacity}

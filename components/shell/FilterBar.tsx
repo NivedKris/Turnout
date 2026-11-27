@@ -36,10 +36,10 @@ export function FilterBar({
   const isDefault = !params.get("asOf") && [...params.keys()].length === 0;
 
   return (
-    <div data-tour="asof" className="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 md:flex-row md:flex-wrap md:items-center" role="region" aria-label="Filters">
+    <div data-tour="asof" className="flex flex-col gap-2.5 rounded-2xl border border-line bg-surface px-4 py-3 md:flex-row md:flex-wrap md:items-center md:gap-3" role="region" aria-label="Filters">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[13px] font-medium text-fg-2">Viewing as of</span>
-        <div className="flex flex-wrap gap-1" role="group" aria-label="Key dates">
+        <div className="order-last -mx-4 flex w-[calc(100%+2rem)] gap-1 overflow-x-auto px-4 [scrollbar-width:none] md:order-none md:mx-0 md:w-auto md:flex-wrap md:overflow-visible md:px-0" role="group" aria-label="Key dates">
           {presets.map((p) => {
             const on = p.day === asOf;
             return (
@@ -47,7 +47,7 @@ export function FilterBar({
                 key={p.day}
                 onClick={() => set("asOf", p.day)}
                 aria-pressed={on}
-                className={`rounded-full border px-3 py-1 text-[12px] transition-colors ${on ? "border-fg bg-fg text-bg" : "border-line text-fg-2 hover:border-fg-2 hover:text-fg"}`}
+                className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-[12px] transition-colors ${on ? "border-fg bg-fg text-bg" : "border-line text-fg-2 hover:border-fg-2 hover:text-fg"}`}
                 title={label(p.day)}
               >
                 {p.label}
@@ -55,7 +55,7 @@ export function FilterBar({
             );
           })}
         </div>
-        <label className="flex items-center gap-2 text-[12px] text-fg-3">
+        <label className="ml-auto flex items-center gap-2 text-[12px] text-fg-3 md:ml-0">
           <span className="sr-only">Custom date</span>
           <DateField
             aria-label="Viewing as of"

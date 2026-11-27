@@ -18,16 +18,16 @@ export default function DashboardLayout({ children }: LayoutProps<"/">) {
     <Suspense fallback={null}>
     <CopilotProvider>
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 flex items-center gap-4 border-b border-line bg-bg/90 px-4 py-2.5 backdrop-blur md:px-6">
+      <header className="sticky top-0 z-40 flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-bg/90 px-3 py-2 backdrop-blur sm:px-4 md:flex-nowrap md:gap-4 md:px-6 md:py-2.5">
         <Link href="/" aria-label="Turnout home" className="shrink-0">
           <Wordmark />
         </Link>
-        <div data-tour="command" className="min-w-0 max-w-xl flex-1">
+        <div data-tour="command" className="order-last w-full min-w-0 md:order-none md:w-auto md:max-w-xl md:flex-1">
           <Suspense fallback={<div className="h-8" />}>
             <CommandBar />
           </Suspense>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           <TerminalLink />
           <ThemeToggle />
           <HelpButton />

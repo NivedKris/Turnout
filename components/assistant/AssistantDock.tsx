@@ -118,7 +118,7 @@ export function AssistantDock() {
             </div>
           ) : (
             <button onClick={() => void toggle()} className="text-[13px] font-medium text-fg">
-              Ask Turnout <kbd className="ml-1 font-mono text-[11px] text-fg-3">⌘J</kbd>
+              Ask Turnout <kbd className="ml-1 hidden font-mono text-[11px] text-fg-3 md:inline">⌘J</kbd>
             </button>
           )}
           <button

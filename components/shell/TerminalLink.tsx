@@ -14,7 +14,7 @@ export function TerminalLink() {
       href={withAsOf("/terminal", asOf)}
       aria-current={active ? "page" : undefined}
       title="Copilot terminal: answers with their execution trace"
-      className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] transition-colors ${
+      className={`group flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] transition-colors sm:px-3 ${
         active ? "border-fg bg-fg text-bg" : "border-fg/60 text-fg hover:bg-fg hover:text-bg"
       }`}
     >

@@ -176,7 +176,8 @@ export function ScenarioBuilder({ asOf, campaigns, presets }: { asOf: string; ca
                 {n}
               </p>
             ))}
-            <table className="w-full font-mono text-[12px] tabular">
+            <div className="-mx-1 overflow-x-auto px-1">
+            <table className="w-full font-mono text-[12px] tabular min-w-[560px]">
               <thead>
                 <tr className="border-b border-line text-left text-[10px] uppercase tracking-wider text-fg-3">
                   <th className="py-1.5 font-normal">Campaign</th>
@@ -196,6 +197,7 @@ export function ScenarioBuilder({ asOf, campaigns, presets }: { asOf: string; ca
                 ))}
               </tbody>
             </table>
+</div>
             <details>
               <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-wider text-fg-3">Assumptions ({res.assumptions.length})</summary>
               <ul className="mt-2 flex flex-col gap-1 text-[12px] text-fg-2">

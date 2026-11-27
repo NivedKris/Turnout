@@ -40,7 +40,8 @@ async function Planner({ searchParams }: PageProps<"/planner">) {
         <p className="text-[15px]">{r.reason}</p>
         {r.moves.length > 0 && (
           <>
-            <table className="mt-3 w-full font-mono text-[12px] tabular">
+            <div className="-mx-1 overflow-x-auto px-1">
+            <table className="mt-3 w-full font-mono text-[12px] tabular min-w-[560px]">
               <thead>
                 <tr className="border-b border-line text-left text-[10px] uppercase tracking-wider text-fg-3">
                   <th className="py-1.5 font-normal">From</th>
@@ -70,6 +71,7 @@ async function Planner({ searchParams }: PageProps<"/planner">) {
                 ))}
               </tbody>
             </table>
+</div>
             {r.effect && (
               <p className="mt-3 font-mono text-[12px]">
                 Effect: <b>+{num(r.effect.delta.registrations, 1)}</b> registrations, <b>+{num(r.effect.delta.visitors, 1)}</b> projected visitors, spend Δ {inr(r.effect.delta.spend)}
