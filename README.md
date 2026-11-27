@@ -8,7 +8,7 @@ RISA Growth APM assignment, Part 2 · **Challenge A: Attendee Growth** · city: 
 |---|---|
 | **Live app** | https://turnout-bay.vercel.app/ |
 | **Passcode** | turnout2026|
-| **3-slide deck** | [Turnout-slides.pdf](Turnout-slides.pdf) (LaTeX source in `slides/`) |
+| **3-slide deck** | [Turnout-slides.pdf](Turnout-slides.pdf) |
 | **Full write-up (26 pages, with references)** | [README.pdf](README.pdf) |
 
 **Why Bengaluru.** Bengaluru Urban has **1,148 colleges, the most of any district in India** (Pune 517, Hyderabad 465; AISHE 2023-24). The dataset's channels (ambassadors, college partnerships, clubs, referrals) work best where many campuses sit close together, and the college count gives the goal plan a sourced starting population instead of a guess.
@@ -289,7 +289,6 @@ npm run dev                  # http://localhost:3000
   2. Set Node to 22, and the Functions region to the one nearest the Atlas cluster.
   3. In Atlas, allow `0.0.0.0/0`.
   4. On a fresh database, call `POST /api/admin/seed` once.
-- **Rebuild the slides:** `./slides/build.sh` (needs the `texlive/texlive` Docker image).
 
 ## 11. Known limitations and next steps
 

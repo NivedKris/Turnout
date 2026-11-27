@@ -1,4 +1,4 @@
-// Screenshots for the README and the paper (viewport, 2x).  node scripts/paper-shots.mjs [base]
+// Screenshots for the README (viewport, 2x).  node scripts/screenshots.mjs [base]
 import { chromium } from "playwright-core";
 const base = process.argv[2] ?? "http://localhost:3000";
 const out = "docs/img";

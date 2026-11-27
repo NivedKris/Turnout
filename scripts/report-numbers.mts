@@ -1,4 +1,4 @@
-/** Numbers quoted in the README/paper, from the original workbook (no DB). npx tsx scripts/paper-numbers.mts */
+/** Numbers quoted in the README, from the original workbook (no DB). npx tsx scripts/report-numbers.mts */
 import { readFile } from "node:fs/promises";
 import { buildSnapshot, projection, scenario } from "../lib/analytics";
 import { goalModel } from "../lib/analytics/strategy";
