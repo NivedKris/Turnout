@@ -54,3 +54,4 @@ slides/turnout-slides.pdf
 # Working material kept locally (README.pdf and the slides are the published versions)
 /docs/
 /paper/
+slides/*.out
